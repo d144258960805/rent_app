@@ -1,6 +1,6 @@
 from app.db import get_db
 
-def get_properties_with_filter(min_price=None, max_price=None, room_type=None, has_subsidy=None):
+def get_properties_with_filter(min_price=None, max_price=None, room_type=None, has_subsidy=None, min_size=None, max_size=None):
     """
     根據篩選條件取得房源清單 (F-01 分類篩選)
     """
@@ -26,6 +26,14 @@ def get_properties_with_filter(min_price=None, max_price=None, room_type=None, h
         if has_subsidy in ('1', '0'):
             query += " AND has_subsidy = ?"
             params.append(int(has_subsidy))
+            
+    if min_size and str(min_size).replace('.', '', 1).isdigit():
+        query += " AND size >= ?"
+        params.append(float(min_size))
+        
+    if max_size and str(max_size).replace('.', '', 1).isdigit():
+        query += " AND size <= ?"
+        params.append(float(max_size))
             
     query += " ORDER BY created_at DESC"
     

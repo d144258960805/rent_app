@@ -13,13 +13,17 @@ def list_properties():
     max_price = request.args.get('max_price', '')
     room_type = request.args.get('room_type', 'all')
     has_subsidy = request.args.get('has_subsidy', 'all')
+    min_size = request.args.get('min_size', '')
+    max_size = request.args.get('max_size', '')
     
     # 呼叫 Model 取得篩選後的房源
     properties = get_properties_with_filter(
         min_price=min_price,
         max_price=max_price,
         room_type=room_type,
-        has_subsidy=has_subsidy
+        has_subsidy=has_subsidy,
+        min_size=min_size,
+        max_size=max_size
     )
     
     return render_template('property/list.html', 
@@ -27,4 +31,6 @@ def list_properties():
                            min_price=min_price,
                            max_price=max_price,
                            room_type=room_type,
-                           has_subsidy=has_subsidy)
+                           has_subsidy=has_subsidy,
+                           min_size=min_size,
+                           max_size=max_size)
