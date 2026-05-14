@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>房源詳細資訊 - 逢甲租屋網</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="logo">逢甲租屋網</div>
+    </header>
+
+    <main class="container">
+        <div class="room-header">
+            <h1>逢甲大學旁 - 採光大套房 (Demo)</h1>
+            <p class="room-meta">台中市西屯區逢甲路 123 號 • 獨立套房 • 8 坪</p>
+        </div>
+
+        <div class="room-gallery">
+            <div class="placeholder-image">房源主圖預覽</div>
+        </div>
+
+        <div class="reviews-section">
+            <div class="reviews-header">
+                <h2>租客真實評論</h2>
+                <!-- 評論上傳按鈕 -->
+                <button id="openReviewModalBtn" class="btn-primary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                    撰寫評論
+                </button>
+            </div>
+            
+            <div class="reviews-list">
+                <!-- 這邊只是示意，實際資料應從後端撈取 -->
+                <p class="empty-state">目前還沒有評論，成為第一個留下真實評價的租客吧！</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- 評論上傳 Modal -->
+    <div id="reviewModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>匿名上傳真實評價</h3>
+                <button id="closeModalBtn" class="close-btn">&times;</button>
+            </div>
+            <form id="reviewForm">
+                <!-- 隱藏的房源 ID -->
+                <input type="hidden" name="room_id" value="1">
+                
+                <div class="form-group">
+                    <label for="reviewContent">你的評論 (必填)</label>
+                    <textarea id="reviewContent" name="content" rows="4" placeholder="例如：採光很好，但是隔音稍微有點差..." required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="reviewImage">上傳實際照片 (選填，限 5MB 以內)</label>
+                    <div class="file-upload-wrapper">
+                        <input type="file" id="reviewImage" name="image" accept="image/png, image/jpeg, image/jpg, image/gif">
+                        <div class="file-upload-trigger">
+                            <span id="fileNameDisplay">選擇照片</span>
+                        </div>
+                    </div>
+                    <div id="imagePreviewContainer" class="image-preview-container" style="display: none;">
+                        <img id="imagePreview" src="" alt="預覽圖片">
+                        <button type="button" id="removeImageBtn" class="remove-image-btn">移除</button>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" id="cancelBtn" class="btn-secondary">取消</button>
+                    <button type="submit" id="submitBtn" class="btn-primary">匿名送出</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 成功提示 Toast -->
+    <div id="toast" class="toast">上傳成功！感謝您的真實回饋。</div>
+
+    <script src="{{ url_for('static', filename='js/review.js') }}"></script>
+</body>
+</html>
