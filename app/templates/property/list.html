@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}尋找房源 - 逢甲租屋網{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-card {
+        border-radius: 16px;
+        border: none;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        background: white;
+        position: sticky;
+        top: 100px;
+    }
+    .property-card {
+        border-radius: 16px;
+        border: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden;
+        background: white;
+        height: 100%;
+        cursor: pointer;
+    }
+    .property-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+    }
+    .property-image-placeholder {
+        height: 200px;
+        background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #64748b;
+        font-size: 2rem;
+    }
+    .price-badge {
+        background: var(--primary-color);
+        color: white;
+        font-weight: 700;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 1.1rem;
+    }
+    .tag-badge {
+        background: #f1f5f9;
+        color: #475569;
+        font-weight: 500;
+        border: 1px solid #e2e8f0;
+    }
+    .subsidy-badge {
+        background: #dcfce7;
+        color: #166534;
+        font-weight: 600;
+    }
+    .form-label {
+        font-weight: 600;
+        color: #334155;
+        font-size: 0.9rem;
+    }
+    .form-select, .form-control {
+        border-radius: 8px;
+        border-color: #cbd5e1;
+        padding: 10px 15px;
+    }
+    .form-select:focus, .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.25rem rgba(37, 99, 235, 0.15);
+    }
+    .btn-search {
+        border-radius: 8px;
+        padding: 10px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <h2 class="fw-bold mb-1">逢甲嚴選房源</h2>
+            <p class="text-muted mb-0">為您找到 {{ properties|length }} 間符合條件的房屋</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- 左側篩選器 (F-01 分類篩選) -->
+        <div class="col-lg-3 mb-4">
+            <div class="filter-card p-4">
+                <h5 class="fw-bold mb-4">
+                    <i class="bi bi-funnel-fill text-primary me-2"></i>篩選條件
+                </h5>
+                <form action="/properties" method="GET">
+                    
+                    <!-- 租金範圍 -->
+                    <div class="mb-4">
+                        <label class="form-label">租金範圍 (月)</label>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <input type="number" class="form-control" name="min_price" placeholder="最低" value="{{ min_price }}">
+                            </div>
+                            <div class="col-6">
+                                <input type="number" class="form-control" name="max_price" placeholder="最高" value="{{ max_price }}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 房型 -->
+                    <div class="mb-4">
+                        <label class="form-label">房型</label>
+                        <select class="form-select" name="room_type">
+                            <option value="all" {% if room_type == 'all' %}selected{% endif %}>不限房型</option>
+                            <option value="獨立套房" {% if room_type == '獨立套房' %}selected{% endif %}>獨立套房</option>
+                            <option value="分租套房" {% if room_type == '分租套房' %}selected{% endif %}>分租套房</option>
+                            <option value="雅房" {% if room_type == '雅房' %}selected{% endif %}>雅房</option>
+                            <option value="整層住家" {% if room_type == '整層住家' %}selected{% endif %}>整層住家</option>
+                        </select>
+                    </div>
+
+                    <!-- 租屋補助 -->
+                    <div class="mb-4">
+                        <label class="form-label">租屋補助</label>
+                        <select class="form-select" name="has_subsidy">
+                            <option value="all" {% if has_subsidy == 'all' %}selected{% endif %}>不限</option>
+                            <option value="1" {% if has_subsidy == '1' %}selected{% endif %}>可申請補助</option>
+                            <option value="0" {% if has_subsidy == '0' %}selected{% endif %}>不可申請</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-search w-100 mt-2">
+                        套用篩選
+                    </button>
+                    <a href="/properties" class="btn btn-light w-100 mt-2 text-muted fw-semibold" style="border-radius: 8px;">
+                        清除條件
+                    </a>
+                </form>
+            </div>
+        </div>
+
+        <!-- 右側房源列表 -->
+        <div class="col-lg-9">
+            {% if properties %}
+            <div class="row row-cols-1 row-cols-md-2 g-4">
+                {% for prop in properties %}
+                <div class="col">
+                    <div class="property-card h-100 d-flex flex-column">
+                        <div class="property-image-placeholder">
+                            <i class="bi bi-image text-white opacity-50"></i>
+                        </div>
+                        <div class="p-4 d-flex flex-column flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="fw-bold mb-0 text-truncate" title="{{ prop.title }}">{{ prop.title }}</h5>
+                            </div>
+                            
+                            <p class="text-muted small mb-3">
+                                <i class="bi bi-geo-alt-fill me-1"></i>{{ prop.address }}
+                            </p>
+                            
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                <span class="badge tag-badge rounded-pill px-3 py-2">
+                                    <i class="bi bi-door-open me-1"></i>{{ prop.room_type }}
+                                </span>
+                                <span class="badge tag-badge rounded-pill px-3 py-2">
+                                    <i class="bi bi-arrows-fullscreen me-1"></i>{{ prop.size }} 坪
+                                </span>
+                                {% if prop.has_subsidy %}
+                                <span class="badge subsidy-badge rounded-pill px-3 py-2">
+                                    <i class="bi bi-check-circle-fill me-1"></i>可申請補助
+                                </span>
+                                {% endif %}
+                            </div>
+                            
+                            <p class="text-muted small mb-4 flex-grow-1" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                {{ prop.description }}
+                            </p>
+                            
+                            <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top">
+                                <div class="price-badge">
+                                    NT$ {{ "{:,}".format(prop.price) }} <span class="fw-normal fs-6 opacity-75">/月</span>
+                                </div>
+                                <button class="btn btn-outline-primary rounded-circle" style="width: 40px; height: 40px;" title="查看詳情">
+                                    <i class="bi bi-arrow-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <div class="display-1 text-muted opacity-25 mb-3">
+                    <i class="bi bi-search"></i>
+                </div>
+                <h4 class="text-muted fw-bold">找不到符合條件的房源</h4>
+                <p class="text-muted">請嘗試放寬您的篩選條件</p>
+                <a href="/properties" class="btn btn-primary px-4 mt-2 rounded-pill">清除條件</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
