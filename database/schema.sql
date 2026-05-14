@@ -29,48 +29,48 @@ CREATE TABLE IF NOT EXISTS properties (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     landlord_id INTEGER NOT NULL,
     title TEXT NOT NULL,
-    description TEXT,
-    rent INTEGER NOT NULL,
-    room_type TEXT,
-    size INTEGER,
-    subsidy_available BOOLEAN DEFAULT 0,
-    address TEXT,
-    status TEXT DEFAULT 'active' CHECK(status IN ('active', 'inactive')),
+    description TEXT NOT NULL,
+    price INTEGER NOT NULL,
+    room_type TEXT NOT NULL,
+    size REAL NOT NULL,
+    has_subsidy BOOLEAN DEFAULT 0,
+    inc_water BOOLEAN DEFAULT 0,
+    inc_internet BOOLEAN DEFAULT 0,
+    inc_management BOOLEAN DEFAULT 0,
+    inc_cleaning BOOLEAN DEFAULT 0,
+    building_type TEXT,
+    is_rooftop BOOLEAN DEFAULT 0,
+    distance_to_fcu INTEGER,
+    fcu_zone TEXT,
+    equipments TEXT,
+    landlord_type TEXT,
+    is_certified BOOLEAN DEFAULT 0,
+    tags TEXT,
+    address TEXT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (landlord_id) REFERENCES users(id)
+    FOREIGN KEY (landlord_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS tags (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE
-);
-
-CREATE TABLE IF NOT EXISTS property_tags (
-    property_id INTEGER NOT NULL,
-    tag_id INTEGER NOT NULL,
-    PRIMARY KEY (property_id, tag_id),
-    FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE,
-    FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
-);
-
+-- 評論表
 CREATE TABLE IF NOT EXISTS reviews (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     property_id INTEGER NOT NULL,
-    author_id INTEGER NOT NULL,
-    content TEXT,
-    image_path TEXT,
-    rating INTEGER CHECK(rating >= 1 AND rating <= 5),
+    student_id INTEGER NOT NULL,
+    rating INTEGER NOT NULL CHECK(rating >= 1 AND rating <= 5),
+    comment TEXT NOT NULL,
+    image_url TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (property_id) REFERENCES properties(id),
-    FOREIGN KEY (author_id) REFERENCES users(id)
+    FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- 徵室友貼文表
 CREATE TABLE IF NOT EXISTS roommate_posts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    author_id INTEGER NOT NULL,
+    student_id INTEGER NOT NULL,
     title TEXT NOT NULL,
     content TEXT NOT NULL,
     status TEXT DEFAULT 'open' CHECK(status IN ('open', 'closed')),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (author_id) REFERENCES users(id)
+    FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE
 );

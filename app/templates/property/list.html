@@ -1,0 +1,423 @@
+{% extends "base.html" %}
+
+{% block title %}尋找房源 - 逢甲租屋網{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-card {
+        border-radius: 16px;
+        border: none;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        background: white;
+        position: sticky;
+        top: 100px;
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+    }
+    .filter-card::-webkit-scrollbar {
+        width: 6px;
+    }
+    .filter-card::-webkit-scrollbar-thumb {
+        background-color: #cbd5e1;
+        border-radius: 10px;
+    }
+    .accordion-button {
+        font-weight: 600;
+        color: #334155;
+        background-color: transparent !important;
+        box-shadow: none !important;
+        padding: 12px 0;
+    }
+    .accordion-button:not(.collapsed) {
+        color: var(--primary-color);
+    }
+    .accordion-item {
+        border: none;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .accordion-item:last-child {
+        border-bottom: none;
+    }
+    .accordion-body {
+        padding: 10px 0 20px 0;
+    }
+    .property-card {
+        border-radius: 16px;
+        border: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden;
+        background: white;
+        height: 100%;
+        cursor: pointer;
+    }
+    .property-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+    }
+    .property-image-placeholder {
+        height: 200px;
+        background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #64748b;
+        font-size: 2rem;
+    }
+    .price-badge {
+        background: var(--primary-color);
+        color: white;
+        font-weight: 700;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 1.1rem;
+    }
+    .tag-badge {
+        background: #f1f5f9;
+        color: #475569;
+        font-weight: 500;
+        border: 1px solid #e2e8f0;
+        font-size: 0.8rem;
+    }
+    .subsidy-badge {
+        background: #dcfce7;
+        color: #166534;
+        font-weight: 600;
+    }
+    .form-label {
+        font-weight: 600;
+        color: #475569;
+        font-size: 0.85rem;
+        margin-bottom: 0.3rem;
+    }
+    .form-select, .form-control {
+        border-radius: 8px;
+        border-color: #cbd5e1;
+        padding: 8px 12px;
+        font-size: 0.9rem;
+    }
+    .form-select:focus, .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.25rem rgba(37, 99, 235, 0.15);
+    }
+    .btn-search {
+        border-radius: 8px;
+        padding: 12px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+    .form-check-label {
+        font-size: 0.9rem;
+        color: #334155;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <h2 class="fw-bold mb-1">逢甲嚴選房源</h2>
+            <p class="text-muted mb-0">為您找到 {{ properties|length }} 間符合條件的房屋</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- 左側篩選器 (進階版) -->
+        <div class="col-lg-3 mb-4">
+            <form action="/properties" method="GET" class="filter-card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">
+                        <i class="bi bi-funnel-fill text-primary me-2"></i>篩選條件
+                    </h5>
+                    <a href="/properties" class="text-muted small text-decoration-none"><i class="bi bi-arrow-counterclockwise"></i> 清除</a>
+                </div>
+
+                <div class="accordion" id="filterAccordion">
+                    
+                    <!-- 1. 預算與補助 -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBudget">
+                                <i class="bi bi-wallet2 me-2"></i>預算與費用
+                            </button>
+                        </h2>
+                        <div id="collapseBudget" class="accordion-collapse collapse show">
+                            <div class="accordion-body">
+                                <!-- 租金範圍 -->
+                                <div class="mb-3">
+                                    <label class="form-label">租金範圍 (月)</label>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <input type="number" class="form-control" name="min_price" placeholder="最低" value="{{ filters.min_price }}">
+                                        </div>
+                                        <div class="col-6">
+                                            <input type="number" class="form-control" name="max_price" placeholder="最高" value="{{ filters.max_price }}">
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- 租屋補助 -->
+                                <div class="mb-3">
+                                    <label class="form-label">租屋補助</label>
+                                    <select class="form-select" name="has_subsidy">
+                                        <option value="all" {% if filters.has_subsidy == 'all' %}selected{% endif %}>不限</option>
+                                        <option value="1" {% if filters.has_subsidy == '1' %}selected{% endif %}>可申請補助</option>
+                                        <option value="0" {% if filters.has_subsidy == '0' %}selected{% endif %}>不可申請</option>
+                                    </select>
+                                </div>
+                                <!-- 費用包含 -->
+                                <div>
+                                    <label class="form-label mb-2">費用包含 (勾選代表必須包)</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="inc_water" value="1" id="inc_water" {% if filters.inc_water %}checked{% endif %}>
+                                        <label class="form-check-label" for="inc_water">包水費</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="inc_internet" value="1" id="inc_internet" {% if filters.inc_internet %}checked{% endif %}>
+                                        <label class="form-check-label" for="inc_internet">包網路</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="inc_management" value="1" id="inc_management" {% if filters.inc_management %}checked{% endif %}>
+                                        <label class="form-check-label" for="inc_management">包管理費</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="inc_cleaning" value="1" id="inc_cleaning" {% if filters.inc_cleaning %}checked{% endif %}>
+                                        <label class="form-check-label" for="inc_cleaning">包清潔費</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. 空間與房型 -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSpace">
+                                <i class="bi bi-houses me-2"></i>房型與空間
+                            </button>
+                        </h2>
+                        <div id="collapseSpace" class="accordion-collapse collapse">
+                            <div class="accordion-body">
+                                <div class="mb-3">
+                                    <label class="form-label">房型</label>
+                                    <select class="form-select" name="room_type">
+                                        <option value="all" {% if filters.room_type == 'all' %}selected{% endif %}>不限</option>
+                                        <option value="獨立套房" {% if filters.room_type == '獨立套房' %}selected{% endif %}>獨立套房</option>
+                                        <option value="分租套房" {% if filters.room_type == '分租套房' %}selected{% endif %}>分租套房</option>
+                                        <option value="雅房" {% if filters.room_type == '雅房' %}selected{% endif %}>雅房</option>
+                                        <option value="整層住家" {% if filters.room_type == '整層住家' %}selected{% endif %}>整層住家</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">建物類型</label>
+                                    <select class="form-select" name="building_type">
+                                        <option value="all" {% if filters.building_type == 'all' %}selected{% endif %}>不限</option>
+                                        <option value="電梯大樓" {% if filters.building_type == '電梯大樓' %}selected{% endif %}>電梯大樓</option>
+                                        <option value="公寓" {% if filters.building_type == '公寓' %}selected{% endif %}>公寓 (爬梯)</option>
+                                        <option value="透天厝" {% if filters.building_type == '透天厝' %}selected{% endif %}>透天厝</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">房屋大小 (坪)</label>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <input type="number" step="0.1" class="form-control" name="min_size" placeholder="最小" value="{{ filters.min_size }}">
+                                        </div>
+                                        <div class="col-6">
+                                            <input type="number" step="0.1" class="form-control" name="max_size" placeholder="最大" value="{{ filters.max_size }}">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input" type="checkbox" name="exclude_rooftop" value="1" id="exclude_rooftop" {% if filters.exclude_rooftop %}checked{% endif %}>
+                                    <label class="form-check-label text-danger" for="exclude_rooftop">排除頂樓加蓋</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. 地點與交通 -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseLocation">
+                                <i class="bi bi-geo-alt me-2"></i>地點與交通
+                            </button>
+                        </h2>
+                        <div id="collapseLocation" class="accordion-collapse collapse">
+                            <div class="accordion-body">
+                                <div class="mb-3">
+                                    <label class="form-label">步行至逢甲距離</label>
+                                    <select class="form-select" name="distance_to_fcu">
+                                        <option value="">不限</option>
+                                        <option value="5" {% if filters.distance_to_fcu == '5' %}selected{% endif %}>5 分鐘內</option>
+                                        <option value="10" {% if filters.distance_to_fcu == '10' %}selected{% endif %}>10 分鐘內</option>
+                                        <option value="15" {% if filters.distance_to_fcu == '15' %}selected{% endif %}>15 分鐘內</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">生活圈</label>
+                                    <select class="form-select" name="fcu_zone">
+                                        <option value="all" {% if filters.fcu_zone == 'all' %}selected{% endif %}>不限</option>
+                                        <option value="正門" {% if filters.fcu_zone == '正門' %}selected{% endif %}>近正門</option>
+                                        <option value="側門" {% if filters.fcu_zone == '側門' %}selected{% endif %}>近側門</option>
+                                        <option value="文華路商圈" {% if filters.fcu_zone == '文華路商圈' %}selected{% endif %}>文華路商圈 (熱鬧)</option>
+                                        <option value="僑光" {% if filters.fcu_zone == '僑光' %}selected{% endif %}>近僑光</option>
+                                        <option value="水湳" {% if filters.fcu_zone == '水湳' %}selected{% endif %}>近水湳校區 (安靜)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. 設備與服務 -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAmenities">
+                                <i class="bi bi-tv me-2"></i>設備與服務
+                            </button>
+                        </h2>
+                        <div id="collapseAmenities" class="accordion-collapse collapse">
+                            <div class="accordion-body">
+                                {% set eq_list = ['冷氣', '冰箱', '獨立洗衣機', '共用洗衣機', '飲水機', '光纖網路', 'Wi-Fi', '垃圾代收', '代收包裹', '對外窗'] %}
+                                <div class="row g-2">
+                                    {% for eq in eq_list %}
+                                    <div class="col-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="equipments" value="{{ eq }}" id="eq_{{ loop.index }}" {% if eq in filters.equipments %}checked{% endif %}>
+                                            <label class="form-check-label" style="font-size: 0.85rem;" for="eq_{{ loop.index }}">{{ eq }}</label>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 5. 安全與信任 -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSecurity">
+                                <i class="bi bi-shield-check me-2"></i>安全與信任
+                            </button>
+                        </h2>
+                        <div id="collapseSecurity" class="accordion-collapse collapse">
+                            <div class="accordion-body">
+                                <div class="mb-3">
+                                    <label class="form-label">房東類型</label>
+                                    <select class="form-select" name="landlord_type">
+                                        <option value="all" {% if filters.landlord_type == 'all' %}selected{% endif %}>不限</option>
+                                        <option value="房東直租" {% if filters.landlord_type == '房東直租' %}selected{% endif %}>房東直租 (免仲介費)</option>
+                                        <option value="代管公司" {% if filters.landlord_type == '代管公司' %}selected{% endif %}>代管公司</option>
+                                    </select>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="is_certified" value="1" id="is_certified" {% if filters.is_certified %}checked{% endif %}>
+                                    <label class="form-check-label fw-bold text-success" for="is_certified">
+                                        <i class="bi bi-patch-check-fill"></i> 僅顯示已上傳權狀認證
+                                    </label>
+                                </div>
+                                <hr>
+                                <label class="form-label mb-2">安全設備</label>
+                                {% set sec_list = ['門禁讀卡機', '24小時監控', '消防器材'] %}
+                                {% for sec in sec_list %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="equipments" value="{{ sec }}" id="sec_{{ loop.index }}" {% if sec in filters.equipments %}checked{% endif %}>
+                                    <label class="form-check-label" style="font-size: 0.85rem;" for="sec_{{ loop.index }}">{{ sec }}</label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-search w-100 mt-4 shadow-sm">
+                    套用所有篩選
+                </button>
+            </form>
+        </div>
+
+        <!-- 右側房源列表 -->
+        <div class="col-lg-9">
+            {% if properties %}
+            <div class="row row-cols-1 row-cols-md-2 g-4">
+                {% for prop in properties %}
+                <div class="col">
+                    <div class="property-card h-100 d-flex flex-column">
+                        <div class="property-image-placeholder">
+                            <i class="bi bi-image text-white opacity-50"></i>
+                        </div>
+                        <div class="p-4 d-flex flex-column flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="fw-bold mb-0 text-truncate" title="{{ prop.title }}">
+                                    {{ prop.title }}
+                                    {% if prop.is_certified %}
+                                        <i class="bi bi-patch-check-fill text-success fs-6 ms-1" title="權狀已認證"></i>
+                                    {% endif %}
+                                </h5>
+                            </div>
+                            
+                            <p class="text-muted small mb-3">
+                                <i class="bi bi-geo-alt-fill me-1"></i>{{ prop.address }} 
+                                {% if prop.fcu_zone %}(近{{ prop.fcu_zone }}){% endif %}
+                            </p>
+                            
+                            <!-- 標籤區塊 -->
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                <span class="badge tag-badge rounded-pill px-3 py-2">
+                                    <i class="bi bi-door-open me-1"></i>{{ prop.room_type }}
+                                </span>
+                                <span class="badge tag-badge rounded-pill px-3 py-2">
+                                    <i class="bi bi-arrows-fullscreen me-1"></i>{{ prop.size }} 坪
+                                </span>
+                                {% if prop.building_type %}
+                                <span class="badge tag-badge rounded-pill px-3 py-2">
+                                    <i class="bi bi-building me-1"></i>{{ prop.building_type }}
+                                </span>
+                                {% endif %}
+                                {% if prop.has_subsidy %}
+                                <span class="badge subsidy-badge rounded-pill px-3 py-2">
+                                    <i class="bi bi-check-circle-fill me-1"></i>可申請補助
+                                </span>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- 費用包含小圖示 -->
+                            <div class="d-flex gap-3 mb-3 text-muted small">
+                                {% if prop.inc_water %}<span title="包水"><i class="bi bi-droplet-fill text-info"></i> 水</span>{% endif %}
+                                {% if prop.inc_internet %}<span title="包網路"><i class="bi bi-wifi text-primary"></i> 網</span>{% endif %}
+                                {% if prop.inc_management %}<span title="包管理費"><i class="bi bi-person-badge-fill text-secondary"></i> 管</span>{% endif %}
+                                {% if prop.inc_cleaning %}<span title="包清潔費"><i class="bi bi-trash-fill text-warning"></i> 清</span>{% endif %}
+                            </div>
+
+                            <p class="text-muted small mb-4 flex-grow-1" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                {{ prop.description }}
+                            </p>
+                            
+                            <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top">
+                                <div class="price-badge">
+                                    NT$ {{ "{:,}".format(prop.price) }} <span class="fw-normal fs-6 opacity-75">/月</span>
+                                </div>
+                                <button class="btn btn-outline-primary rounded-circle" style="width: 40px; height: 40px;" title="查看詳情">
+                                    <i class="bi bi-arrow-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <div class="display-1 text-muted opacity-25 mb-3">
+                    <i class="bi bi-search"></i>
+                </div>
+                <h4 class="text-muted fw-bold">找不到符合條件的房源</h4>
+                <p class="text-muted">請嘗試放寬您的篩選條件</p>
+                <a href="/properties" class="btn btn-primary px-4 mt-3 rounded-pill shadow-sm">清除條件</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
