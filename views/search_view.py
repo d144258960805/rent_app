@@ -16,7 +16,7 @@ class SearchView(ctk.CTkFrame):
         # 初始載入熱門標籤
         self._load_popular_tags()
         # 初始載入所有房源
-        self.controller.perform_search([])
+        self.controller.perform_search(keyword="", tags=[])
         
     def _setup_ui(self):
         self.grid_rowconfigure(2, weight=1)
@@ -30,8 +30,18 @@ class SearchView(ctk.CTkFrame):
         search_frame = ctk.CTkFrame(self, fg_color="transparent")
         search_frame.grid(row=1, column=0, padx=20, pady=10, sticky="ew")
         
+        # 關鍵字輸入框與搜尋按鈕
+        input_frame = ctk.CTkFrame(search_frame, fg_color="transparent")
+        input_frame.pack(fill="x", pady=5)
+        
+        self.keyword_entry = ctk.CTkEntry(input_frame, placeholder_text="輸入房源名稱、地址或房型...", width=400, font=("Arial", 14))
+        self.keyword_entry.pack(side="left", padx=(0, 10))
+        
+        search_btn = ctk.CTkButton(input_frame, text="搜尋", width=80, command=self.trigger_search)
+        search_btn.pack(side="left")
+        
         self.tags_container = ctk.CTkFrame(search_frame, fg_color="transparent")
-        self.tags_container.pack(fill="x", pady=5)
+        self.tags_container.pack(fill="x", pady=15)
         
         # 已選標籤顯示區
         self.selected_tags_label = ctk.CTkLabel(search_frame, text="已選標籤：無", font=("Arial", 14))
@@ -76,7 +86,12 @@ class SearchView(ctk.CTkFrame):
             self.selected_tags_label.configure(text="已選標籤：無")
             
         # 觸發 Controller 進行搜尋
-        self.controller.perform_search(list(self.selected_tags))
+        self.trigger_search()
+        
+    def trigger_search(self):
+        """讀取關鍵字與已選標籤，並觸發搜尋"""
+        keyword = self.keyword_entry.get().strip()
+        self.controller.perform_search(keyword=keyword, tags=list(self.selected_tags))
         
     def update_search_results(self, results):
         """Controller 會呼叫這個方法來更新搜尋結果畫面"""

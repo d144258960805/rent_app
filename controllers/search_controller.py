@@ -5,13 +5,15 @@ class SearchController:
         self.view = view
         self.model = PropertyModel()
         
-    def perform_search(self, tags):
+    def perform_search(self, keyword="", tags=None):
         """
-        處理 UI 傳來的標籤搜尋請求，呼叫 Model 並更新 View。
+        處理 UI 傳來的關鍵字與標籤搜尋請求，呼叫 Model 並更新 View。
+        :param keyword: 搜尋字串
         :param tags: 標籤字串列表，例如 ['落地窗', '養寵物']
         """
+        tags = tags or []
         # 向資料庫查詢
-        results = self.model.search_by_tags(tags)
+        results = self.model.search(keyword=keyword, tags=tags)
         
         # 通知 View 更新畫面
         self.view.update_search_results(results)
