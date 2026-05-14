@@ -1,0 +1,28 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<h2>註冊帳號</h2>
+<form method="post" action="{{ url_for('auth.register') }}">
+    <div style="margin-bottom: 1rem;">
+        <label for="email">Email：</label><br>
+        <input type="email" id="email" name="email" required>
+    </div>
+    <div style="margin-bottom: 1rem;">
+        <label for="password">密碼：</label><br>
+        <input type="password" id="password" name="password" required>
+    </div>
+    <div style="margin-bottom: 1rem;">
+        <label for="name">姓名：</label><br>
+        <input type="text" id="name" name="name" required>
+    </div>
+    <div style="margin-bottom: 1rem;">
+        <label for="role">身分：</label><br>
+        <select id="role" name="role" required>
+            <option value="student">學生</option>
+            <option value="landlord">房東</option>
+            <option value="admin">系統管理者</option>
+        </select>
+    </div>
+    <button type="submit">註冊</button>
+</form>
+{% endblock %}
