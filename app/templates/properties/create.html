@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card shadow-sm border-0 mx-auto" style="max-width: 700px;">
+    <div class="card-header bg-white py-3"><h4 class="mb-0">新增房源</h4></div>
+    <div class="card-body p-4">
+        <form action="{{ url_for('property_bp.create') }}" method="POST">
+            <div class="mb-3">
+                <label class="form-label text-muted">標題 *</label>
+                <input type="text" name="title" class="form-control bg-light" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-muted">房東 ID *</label>
+                <input type="number" name="landlord_id" class="form-control bg-light" required>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label text-muted">租金 (月) *</label>
+                    <input type="number" name="price" class="form-control bg-light" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">房型</label>
+                    <input type="text" name="room_type" placeholder="例如: 獨立套房" class="form-control bg-light">
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-muted">地址</label>
+                <input type="text" name="address" class="form-control bg-light">
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-muted">房屋描述</label>
+                <textarea name="description" class="form-control bg-light" rows="4"></textarea>
+            </div>
+            <div class="mb-4 form-check form-switch">
+                <input type="checkbox" class="form-check-input" name="has_subsidy" id="hasSubsidy" role="switch">
+                <label class="form-check-label text-muted" for="hasSubsidy">此房源可申請租金補貼</label>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 py-2">上架房源</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

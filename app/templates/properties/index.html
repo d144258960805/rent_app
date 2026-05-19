@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>房源列表</h2>
+    <a href="{{ url_for('property_bp.create') }}" class="btn btn-primary shadow-sm">新增房源</a>
+</div>
+<div class="row row-cols-1 row-cols-md-3 g-4">
+    {% for prop in properties %}
+    <div class="col">
+        <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="badge bg-light text-dark border">{{ prop.room_type }}</span>
+                    {% if prop.has_subsidy %}
+                    <span class="badge bg-success">可租補</span>
+                    {% endif %}
+                </div>
+                <h4 class="card-title text-truncate">{{ prop.title }}</h4>
+                <h5 class="text-primary mb-3">${{ prop.price }} / 月</h5>
+                <p class="card-text text-muted small text-truncate"><i class="bi bi-geo-alt"></i> {{ prop.address }}</p>
+                <hr>
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <a href="{{ url_for('property_bp.view', property_id=prop.id) }}" class="btn btn-outline-primary btn-sm rounded-pill px-3">查看詳情</a>
+                    <form action="{{ url_for('property_bp.delete', property_id=prop.id) }}" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3" onclick="return confirm('確定刪除？')">刪除</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12 text-center py-5">
+        <p class="text-muted fs-5">目前沒有房源資料。</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
