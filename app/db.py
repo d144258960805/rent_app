@@ -29,7 +29,7 @@ def init_db():
     cursor.execute("SELECT count(*) FROM users")
     if cursor.fetchone()[0] == 0:
         db.executescript("""
-            INSERT INTO users (username, email, password_hash, role) VALUES ('Test Landlord', 'landlord@test.com', 'hash', 'landlord');
+            INSERT INTO users (name, email, password_hash, role) VALUES ('Test Landlord', 'landlord@test.com', 'hash', 'landlord');
             
             INSERT INTO properties (landlord_id, title, description, price, room_type, size, has_subsidy, inc_water, inc_internet, inc_management, inc_cleaning, building_type, is_rooftop, distance_to_fcu, fcu_zone, equipments, landlord_type, is_certified, tags, address) 
             VALUES (1, '逢甲大學旁採光套房', '近逢甲夜市，採光佳', 6000, '獨立套房', 6.5, 1, 1, 1, 0, 0, '電梯大樓', 0, 5, '正門', '冷氣,冰箱,洗衣機,飲水機,光纖網路,對外窗,垃圾代收,門禁讀卡機', '房東直租', 1, '落地窗,乾濕分離', '台中市西屯區逢甲路1號');
