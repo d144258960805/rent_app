@@ -1,42 +1,66 @@
 {% extends 'layout.html' %}
 
+{% block title %}後台審核系統 - 逢甲租屋網{% endblock %}
+
 {% block content %}
-<h2>後台審核：房東身分驗證</h2>
+<div class="search-card" style="margin-bottom: 2rem; border-left: 4px solid #a855f7;">
+    <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--text-dark); display: flex; align-items: center; gap: 8px;">
+        ⚙️ 系統管理員後台：房東實名認證審核 (F-04)
+    </h2>
+    <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">
+        請核對以下房東上傳之身分證明文件與房屋所有權狀（權狀所有人與姓名相符）。審核通過後，該房東方可解鎖房源刊登權限。
+    </p>
+</div>
 
 {% if verifications %}
-    <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
-        <thead>
-            <tr style="background-color: #f8f9fa; border-bottom: 2px solid #dee2e6;">
-                <th style="padding: 12px; text-align: left;">申請時間</th>
-                <th style="padding: 12px; text-align: left;">房東姓名 (Email)</th>
-                <th style="padding: 12px; text-align: left;">證明文件</th>
-                <th style="padding: 12px; text-align: left;">操作</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for v in verifications %}
-            <tr style="border-bottom: 1px solid #dee2e6;">
-                <td style="padding: 12px;">{{ v.submitted_at }}</td>
-                <td style="padding: 12px;">{{ v.name }}<br><small>{{ v.email }}</small></td>
-                <td style="padding: 12px;">
-                    <a href="{{ url_for('static', filename=v.id_card_path) }}" target="_blank" style="display:block; margin-bottom: 5px;">查看身分證</a>
-                    <a href="{{ url_for('static', filename=v.title_deed_path) }}" target="_blank" style="display:block;">查看權狀</a>
-                </td>
-                <td style="padding: 12px;">
-                    <form method="post" action="{{ url_for('auth.admin_review') }}" style="display: inline-block;">
-                        <input type="hidden" name="verification_id" value="{{ v.id }}">
-                        <button type="submit" name="action" value="approve" style="background-color: #28a745; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">核准</button>
-                    </form>
-                    <form method="post" action="{{ url_for('auth.admin_review') }}" style="display: inline-block;">
-                        <input type="hidden" name="verification_id" value="{{ v.id }}">
-                        <button type="submit" name="action" value="reject" style="background-color: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">拒絕</button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div style="background-color: white; border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow);">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem;">
+            <thead>
+                <tr style="background-color: #f8fafc; border-bottom: 2px solid var(--border); color: var(--text-muted); font-weight: 700; font-size: 0.85rem; text-transform: uppercase;">
+                    <th style="padding: 1.25rem 1.5rem;">申請時間</th>
+                    <th style="padding: 1.25rem 1.5rem;">房東基本資料</th>
+                    <th style="padding: 1.25rem 1.5rem;">證明文件影本 (點擊新視窗開啟)</th>
+                    <th style="padding: 1.25rem 1.5rem; text-align: center;">核決操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for v in verifications %}
+                <tr style="border-bottom: 1px solid var(--border); transition: var(--transition);">
+                    <td style="padding: 1.25rem 1.5rem; color: var(--text-muted);">{{ v.submitted_at }}</td>
+                    <td style="padding: 1.25rem 1.5rem;">
+                        <strong style="color: var(--text-dark); font-size: 1.05rem;">{{ v.name }}</strong><br>
+                        <span style="color: var(--text-muted); font-size: 0.85rem;">{{ v.email }}</span>
+                    </td>
+                    <td style="padding: 1.25rem 1.5rem;">
+                        <a href="{{ url_for('static', filename=v.id_card_path) }}" target="_blank" class="tag-badge" style="display:inline-block; margin-bottom: 6px; background-color: var(--primary-light); color: var(--primary); border-color: var(--primary);">🪪 查看身分證正面</a>
+                        <a href="{{ url_for('static', filename=v.title_deed_path) }}" target="_blank" class="tag-badge" style="display:inline-block; background-color: #fef3c7; color: #b45309; border-color: #fde68a;">📜 查看房屋所有權狀</a>
+                    </td>
+                    <td style="padding: 1.25rem 1.5rem; text-align: center;">
+                        <div style="display: flex; gap: 8px; justify-content: center;">
+                            <form method="post" action="{{ url_for('auth.admin_review') }}">
+                                <input type="hidden" name="verification_id" value="{{ v.id }}">
+                                <button type="submit" name="action" value="approve" class="btn-primary" style="background-color: var(--success); font-size: 0.85rem; padding: 0.4rem 1rem; width: auto;">
+                                    ✔️ 核准通過
+                                </button>
+                            </form>
+                            <form method="post" action="{{ url_for('auth.admin_review') }}">
+                                <input type="hidden" name="verification_id" value="{{ v.id }}">
+                                <button type="submit" name="action" value="reject" class="btn-primary" style="background-color: var(--error); font-size: 0.85rem; padding: 0.4rem 1rem; width: auto;">
+                                    ❌ 退件拒絕
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 {% else %}
-    <p>目前沒有待審核的案件。</p>
+    <div style="background-color: white; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 3rem; text-align: center; color: var(--text-muted); box-shadow: var(--shadow);">
+        <p style="font-size: 3rem; margin-bottom: 1rem;">☕</p>
+        <strong style="font-size: 1.1rem; color: var(--text-dark); display: block;">目前沒有待審核的案件</strong>
+        <span style="font-size: 0.9rem; color: var(--text-muted); margin-top: 5px; display: block;">所有的房東證明文件皆已審核完畢！</span>
+    </div>
 {% endif %}
 {% endblock %}

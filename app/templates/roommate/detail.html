@@ -1,0 +1,111 @@
+{% extends 'layout.html' %}
+
+{% block title %}{{ post.title }} - 逢甲租屋網室友看板{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+    <a href="{{ url_for('roommate.list_posts') }}">← 返回徵室友看板</a>
+</div>
+
+<div class="profile-grid" style="grid-template-columns: 2fr 1fr;">
+    <!-- Main content: Post details & Message board -->
+    <div>
+        <div class="detail-main" style="margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; border-bottom: 2px solid var(--border); padding-bottom: 0.75rem;">
+                <h2 style="font-size: 1.75rem; font-weight: 800; color: var(--text-dark);">{{ post.title }}</h2>
+                <div>
+                    {% if post.status == 'open' %}
+                        <span class="roommate-status open" style="font-size: 0.85rem; padding: 0.3rem 0.8rem;">徵求中</span>
+                    {% else %}
+                        <span class="roommate-status closed" style="font-size: 0.85rem; padding: 0.3rem 0.8rem;">已結案</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <p style="white-space: pre-wrap; font-size: 1.05rem; line-height: 1.7; color: #374151; margin-bottom: 2rem;">
+                {{ post.content }}
+            </p>
+
+            <div style="font-size: 0.8rem; color: var(--text-muted); text-align: right;">
+                📆 發布時間：{{ post.created_at }}
+            </div>
+        </div>
+
+        <!-- Replies Section -->
+        <div class="detail-main">
+            <h3 style="font-weight: 800; margin-bottom: 1.5rem; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem;">
+                💬 時間軸留言與回覆討論 ({% if comments %}{{ comments|length }}{% else %}0{% endif %} 則)
+            </h3>
+
+            {% if comments %}
+                <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem;">
+                    {% for c in comments %}
+                        <div class="roommate-comment-box">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px;">
+                                <strong>👤 {{ c.author_name }} </strong>
+                                <span>{{ c.created_at }}</span>
+                            </div>
+                            <div style="font-size: 0.8rem; background-color: #e2e8f0; display: inline-block; padding: 0.05rem 0.3rem; border-radius: 4px; color: var(--text-muted); margin-bottom: 8px;">
+                                🎓 逢甲認證：{{ c.author_school_email }}
+                            </div>
+                            <p style="font-size: 0.95rem; color: var(--text-dark); line-line: 1.5;">{{ c.content }}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div style="background-color: var(--bg-main); text-align: center; padding: 2rem; border-radius: var(--radius-sm); border: 1px dashed var(--border); color: var(--text-muted); margin-bottom: 2rem;">
+                    目前尚無回覆，只有通過逢甲信箱認證的同學可以提供回覆協調喔！
+                </div>
+            {% endif %}
+
+            <!-- Add Comment Form (restricted to FCU school email verified student) -->
+            <div style="border-top: 1.5px dashed var(--border); padding-top: 1.5rem;">
+                {% if session.get('user_id') %}
+                    {% if is_verified %}
+                        <h4 style="font-weight: 700; margin-bottom: 8px; font-size: 1.05rem;">💬 留下回覆討論揪團</h4>
+                        <form method="post" action="{{ url_for('roommate.comment', post_id=post.id) }}">
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <textarea name="content" class="form-textarea" placeholder="輸入留言，一同協調合租屋況或分攤費用吧..." required rows="3"></textarea>
+                            </div>
+                            <button type="submit" class="btn-primary" style="width: auto; padding: 0.5rem 1.5rem; font-size: 0.9rem; background-color: var(--success);">發表討論回覆</button>
+                        </form>
+                    {% else %}
+                        <div style="background-color: var(--error-light); border: 1.5px solid var(--error); color: #991b1b; padding: 1rem; border-radius: 4px; font-size: 0.9rem;">
+                            🔒 <strong>討論板留言權限已鎖定</strong><br>
+                            本揪團討論板限逢甲大學學生留言討論。請先前往 <a href="{{ url_for('auth.profile') }}">個人控制台</a> 綁定您的逢甲官方信箱（如：學號信箱 <code>@mail.fcu.edu.tw</code>）完成認證以解鎖留言回覆功能！
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div style="text-align: center; padding: 1rem; background-color: var(--warning-light); color: var(--warning); border-radius: 4px; font-size: 0.9rem;">
+                        🔑 請先 <a href="{{ url_for('auth.login') }}">登入</a> 帳號以留言參與室友揪團討論。
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Sidebar (Creator Contact Card) -->
+    <div>
+        <div class="detail-main">
+            <h4 style="font-weight: 700; margin-bottom: 1rem; border-bottom: 1.5px solid var(--border); padding-bottom: 0.5rem;">
+                👤 發起人資訊
+            </h4>
+            
+            <div style="display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.95rem;">
+                <div>學生姓名：<strong>{{ post.author_name }}</strong></div>
+                
+                <div style="border-top: 1px dashed var(--border); padding-top: 0.75rem; margin-top: 0.5rem;">
+                    <strong>🎓 逢甲認證信箱：</strong>
+                    <code style="display: block; background-color: #f1f5f9; padding: 4px 8px; border-radius: 4px; margin-top: 4px; font-size: 0.85rem; border: 1px solid var(--border); overflow-wrap: break-word;">
+                        {{ post.author_school_email }}
+                    </code>
+                </div>
+
+                <div style="border-top: 1px dashed var(--border); padding-top: 0.75rem; margin-top: 0.5rem;">
+                    <div>📞 聯絡電話：<strong>{{ post.author_phone or '尚未公開' }}</strong></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

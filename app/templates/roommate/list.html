@@ -1,0 +1,67 @@
+{% extends 'layout.html' %}
+
+{% block title %}揪團找室友公告區 - 逢甲租屋網{% endblock %}
+
+{% block content %}
+<div class="hero" style="background: linear-gradient(rgba(16, 185, 129, 0.85), rgba(16, 185, 129, 0.95));">
+    <h2>🎓 揪團找室友公告區</h2>
+    <p>合租套房、整層住家徵求室友。限逢甲大學信箱認證在校生發表與留言討論！</p>
+</div>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h3 style="font-size: 1.4rem; font-weight: 700; color: var(--text-dark);">📢 所有求租/徵友公告</h3>
+    <a href="{{ url_for('roommate.post') }}" class="btn-primary" style="width: auto; padding: 0.6rem 1.5rem; background-color: var(--success);">
+        + 發布室友徵求
+    </a>
+</div>
+
+{% if posts %}
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        {% for p in posts %}
+            <div class="roommate-card">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                    <h4 style="font-size: 1.25rem; font-weight: 700;">
+                        <a href="{{ url_for('roommate.detail', post_id=p.id) }}" style="color: var(--text-dark); transition: var(--transition);">
+                            {{ p.title }}
+                        </a>
+                    </h4>
+                    <div>
+                        {% if p.status == 'open' %}
+                            <span class="roommate-status open">徵求中</span>
+                        {% else %}
+                            <span class="roommate-status closed">已結案</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <p style="color: #4b5563; font-size: 0.95rem; margin-bottom: 1.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    {{ p.content }}
+                </p>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: var(--text-muted); border-top: 1px dashed var(--border); padding-top: 10px;">
+                    <div>
+                        👤 發布者：<strong>{{ p.author_name }}</strong>
+                        <span style="margin-left: 8px; font-size: 0.8rem; background-color: #f1f5f9; color: var(--text-muted); padding: 0.1rem 0.4rem; border-radius: 4px;">
+                            🎓 已認證: {{ p.author_school_email }}
+                        </span>
+                    </div>
+                    <div>
+                        📆 發布時間：{{ p.created_at }}
+                    </div>
+                </div>
+                
+                <div style="margin-top: 15px; text-align: right;">
+                    <a href="{{ url_for('roommate.detail', post_id=p.id) }}" style="font-weight: 600; color: var(--success); font-size: 0.9rem;">
+                        查看聯絡資訊與留言回覆 →
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div style="background: white; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 4rem; text-align: center; color: var(--text-muted);">
+        <p style="font-size: 3rem; margin-bottom: 1rem;">💬</p>
+        <p style="font-size: 1.1rem; font-weight: 500;">目前沒有揪團找室友公告發表，歡迎搶先發布您的徵室友需求！</p>
+    </div>
+{% endif %}
+{% endblock %}

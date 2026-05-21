@@ -17,6 +17,9 @@ CREATE TABLE IF NOT EXISTS verifications (
     user_id INTEGER NOT NULL,
     id_card_path TEXT NOT NULL,
     title_deed_path TEXT NOT NULL,
+    owner_name TEXT,
+    property_address TEXT,
+    ai_report TEXT,
     status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'approved', 'rejected')),
     submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     reviewed_at DATETIME,
@@ -29,24 +32,14 @@ CREATE TABLE IF NOT EXISTS properties (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     landlord_id INTEGER NOT NULL,
     title TEXT NOT NULL,
-    description TEXT NOT NULL,
-    price INTEGER NOT NULL,
-    room_type TEXT NOT NULL,
-    size REAL NOT NULL,
-    has_subsidy BOOLEAN DEFAULT 0,
-    inc_water BOOLEAN DEFAULT 0,
-    inc_internet BOOLEAN DEFAULT 0,
-    inc_management BOOLEAN DEFAULT 0,
-    inc_cleaning BOOLEAN DEFAULT 0,
-    building_type TEXT,
-    is_rooftop BOOLEAN DEFAULT 0,
-    distance_to_fcu INTEGER,
-    fcu_zone TEXT,
-    equipments TEXT,
-    landlord_type TEXT,
-    is_certified BOOLEAN DEFAULT 0,
-    tags TEXT,
-    address TEXT NOT NULL,
+    description TEXT,
+    rent INTEGER NOT NULL,
+    room_type TEXT,
+    size INTEGER,
+    subsidy_available BOOLEAN DEFAULT 0,
+    address TEXT,
+    image_path TEXT, -- 新增：房源封面圖
+    status TEXT DEFAULT 'active' CHECK(status IN ('active', 'inactive')),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (landlord_id) REFERENCES users(id) ON DELETE CASCADE
 );
@@ -74,3 +67,23 @@ CREATE TABLE IF NOT EXISTS roommate_posts (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS roommate_comments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    post_id INTEGER NOT NULL,
+    author_id INTEGER NOT NULL,
+    content TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (post_id) REFERENCES roommate_posts(id) ON DELETE CASCADE,
+    FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- 預先插入精選特色標籤
+INSERT OR IGNORE INTO tags (name) VALUES ('落地窗');
+INSERT OR IGNORE INTO tags (name) VALUES ('採光好');
+INSERT OR IGNORE INTO tags (name) VALUES ('乾濕分離');
+INSERT OR IGNORE INTO tags (name) VALUES ('可養寵物');
+INSERT OR IGNORE INTO tags (name) VALUES ('有電梯');
+INSERT OR IGNORE INTO tags (name) VALUES ('獨立陽台');
+INSERT OR IGNORE INTO tags (name) VALUES ('有管理室');
+INSERT OR IGNORE INTO tags (name) VALUES ('近逢甲大學');

@@ -40,17 +40,63 @@ def create_app(test_config=None):
             db.cursor().executescript(f.read())
         db.commit()
 
+        # 安全升級：確保 properties 表包含 image_path 欄位
+        try:
+            db.cursor().execute("ALTER TABLE properties ADD COLUMN image_path TEXT;")
+            db.commit()
+        except sqlite3.OperationalError:
+            pass
+
+        # 安全升級：確保 verifications 表包含 owner_name, property_address, ai_report 欄位
+        for col in ["owner_name", "property_address", "ai_report"]:
+            try:
+                db.cursor().execute(f"ALTER TABLE verifications ADD COLUMN {col} TEXT;")
+                db.commit()
+            except sqlite3.OperationalError:
+                pass
+
     with app.app_context():
         init_db()
 
     # Register blueprints
-    from app.routes import auth, property
+    from app.routes import auth, property, roommate
     app.register_blueprint(auth.bp)
     app.register_blueprint(property.bp)
+    app.register_blueprint(roommate.bp)
 
     @app.route('/')
     def index():
-        return render_template('layout.html', content="Welcome to Feng Chia Rental Platform MVP")
+        from app.models.property import Property, Tag
+        from flask import request
+        
+        query = request.args.get('query', '').strip()
+        rent_range = request.args.get('rent_range', '')
+        room_type = request.args.get('room_type', '')
+        size_range = request.args.get('size_range', '')
+        subsidy_available = request.args.get('subsidy_available', '')
+        selected_tag = request.args.get('tag', '')
+
+        properties = Property.get_filtered(
+            query=query,
+            rent_range=rent_range,
+            room_type=room_type,
+            size_range=size_range,
+            subsidy_available=subsidy_available,
+            tag_name=selected_tag
+        )
+        
+        tags = Tag.get_all()
+        return render_template(
+            'index.html',
+            properties=properties,
+            tags=tags,
+            query=query,
+            rent_range=rent_range,
+            room_type=room_type,
+            size_range=size_range,
+            subsidy_available=subsidy_available,
+            selected_tag=selected_tag
+        )
 
     return app
 

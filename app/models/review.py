@@ -1,3 +1,4 @@
+# app/models/review.py
 from app.models import get_db
 
 class Review:
@@ -17,5 +18,11 @@ class Review:
     def get_by_property(property_id):
         db = get_db()
         cursor = db.cursor()
-        cursor.execute("SELECT * FROM reviews WHERE property_id = ? ORDER BY created_at DESC", (property_id,))
+        cursor.execute("""
+            SELECT r.*, u.name as author_name, u.role as author_role 
+            FROM reviews r 
+            JOIN users u ON r.author_id = u.id 
+            WHERE r.property_id = ? 
+            ORDER BY r.created_at DESC
+        """, (property_id,))
         return cursor.fetchall()

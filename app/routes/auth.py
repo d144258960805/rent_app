@@ -3,6 +3,8 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from app.models.user import User, Verification
+from app.models import get_db
+
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -72,11 +74,23 @@ def upload_docs():
     if request.method == 'POST':
         id_card = request.files.get('id_card')
         title_deed = request.files.get('title_deed')
+        owner_name = request.form.get('owner_name', '').strip()
+        property_address = request.form.get('property_address', '').strip()
         
-        if not id_card or not title_deed:
-            flash('請同時上傳身分證與權狀影本', 'error')
+        if not id_card or not title_deed or not owner_name or not property_address:
+            flash('請填寫所有欄位並上傳身分證與權狀影本', 'error')
             return redirect(url_for('auth.upload_docs'))
             
+        # Get landlord's registered name from DB
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute("SELECT name FROM users WHERE id = ?", (session['user_id'],))
+        landlord_name = cursor.fetchone()['name']
+        
+        # Trigger AI automated deed verification (F-04 AI Upgrade)
+        from app.utils.ai_verifier import ai_verify_deed
+        status, score, ai_report = ai_verify_deed(landlord_name, owner_name, property_address)
+        
         id_card_filename = secure_filename(id_card.filename)
         title_deed_filename = secure_filename(title_deed.filename)
         
@@ -91,10 +105,23 @@ def upload_docs():
         db_id_path = f"uploads/{session['user_id']}_id_{id_card_filename}"
         db_deed_path = f"uploads/{session['user_id']}_deed_{title_deed_filename}"
         
-        Verification.create(session['user_id'], db_id_path, db_deed_path)
+        # Create verification with AI result
+        Verification.create(
+            user_id=session['user_id'],
+            id_card_path=db_id_path,
+            title_deed_path=db_deed_path,
+            owner_name=owner_name,
+            property_address=property_address,
+            status=status,
+            ai_report=ai_report
+        )
         
-        flash('文件上傳成功，請等待系統管理員審核。', 'success')
-        return redirect(url_for('index'))
+        if status == 'approved':
+            flash('🎉 AI 智慧審核成功！成功於網際網路地籍公開資料庫完成交叉比對，地籍真實度極高，已自動核准您的房東身分！', 'success')
+        else:
+            flash('❌ AI 智慧審核退件：公開地籍檢索未通過或登記所有權人姓名不符。請至個人控制台查看詳細 AI 審核報告。', 'error')
+            
+        return redirect(url_for('auth.profile'))
         
     return render_template('auth/upload_docs.html')
 
@@ -115,3 +142,104 @@ def admin_review():
         
     pending_verifications = Verification.get_pending()
     return render_template('auth/admin_review.html', verifications=pending_verifications)
+
+@bp.route('/profile')
+def profile():
+    if 'user_id' not in session:
+        flash('請先登入', 'error')
+        return redirect(url_for('auth.login'))
+        
+    db = get_db()
+    cursor = db.cursor()
+    
+    # Refresh user info
+    cursor.execute("SELECT * FROM users WHERE id = ?", (session['user_id'],))
+    user = cursor.fetchone()
+    
+    # Update session name just in case
+    session['user_name'] = user['name']
+    
+    my_properties = []
+    my_roommates = []
+    
+    if user['role'] == 'landlord':
+        cursor.execute("SELECT * FROM properties WHERE landlord_id = ?", (user['id'],))
+        my_properties = cursor.fetchall()
+    elif user['role'] == 'student':
+        cursor.execute("SELECT * FROM roommate_posts WHERE author_id = ?", (user['id'],))
+        my_roommates = cursor.fetchall()
+        
+    # Get landlord verification status if landlord
+    verification = None
+    if user['role'] == 'landlord':
+        cursor.execute("SELECT * FROM verifications WHERE user_id = ? ORDER BY submitted_at DESC LIMIT 1", (user['id'],))
+        verification = cursor.fetchone()
+        
+    return render_template('auth/profile.html', user=user, properties=my_properties, roommates=my_roommates, verification=verification)
+
+@bp.route('/verify_school_email', methods=('POST',))
+def verify_school_email():
+    if 'user_id' not in session:
+        flash('請先登入', 'error')
+        return redirect(url_for('auth.login'))
+        
+    school_email = request.form.get('school_email', '').strip()
+    
+    if not school_email:
+        flash('請輸入信箱。', 'error')
+        return redirect(url_for('auth.profile'))
+        
+    # Check if school email ends with fcu
+    if not (school_email.endswith('@fcu.edu.tw') or school_email.endswith('@mail.fcu.edu.tw') or school_email.endswith('@o365.fcu.edu.tw')):
+        flash('綁定失敗！請使用逢甲大學官方學術信箱格式 (@fcu.edu.tw 或 @mail.fcu.edu.tw)。', 'error')
+        return redirect(url_for('auth.profile'))
+        
+    User.update_school_email(session['user_id'], school_email)
+    flash('🎉 逢甲信箱認證成功！已成功解鎖室友揪團及留言權限。', 'success')
+    return redirect(url_for('auth.profile'))
+
+@bp.route('/update_demo_score', methods=('POST',))
+def update_demo_score():
+    if 'user_id' not in session:
+        flash('請先登入', 'error')
+        return redirect(url_for('auth.login'))
+        
+    action = request.form.get('action')
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT score FROM users WHERE id = ?", (session['user_id'],))
+    current_score = cursor.fetchone()['score']
+    
+    if action == 'add':
+        new_score = min(100, current_score + 5)
+        flash('👍 模擬守信行為 (如：準時付租、維修快速)！信用積分 +5。', 'success')
+    elif action == 'deduct':
+        new_score = max(0, current_score - 25)
+        flash('⚠️ 模擬惡意行為 (如：違約不理、破壞家具)！信用積分 -25。', 'error')
+    else:
+        new_score = current_score
+        
+    User.update_score(session['user_id'], new_score)
+    return redirect(url_for('auth.profile'))
+
+@bp.route('/update_profile', methods=('POST',))
+def update_profile():
+    if 'user_id' not in session:
+        flash('請先登入。', 'error')
+        return redirect(url_for('auth.login'))
+        
+    name = request.form.get('name', '').strip()
+    phone = request.form.get('phone', '').strip()
+    
+    if not name:
+        flash('姓名為必填欄位。', 'error')
+        return redirect(url_for('auth.profile'))
+        
+    User.update_profile(session['user_id'], name, phone)
+    
+    # Update session name just in case
+    session['user_name'] = name
+    
+    flash('🎉 個人檔案已成功更新！', 'success')
+    return redirect(url_for('auth.profile'))
+
