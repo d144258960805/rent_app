@@ -33,14 +33,31 @@ class User:
         cursor.execute("UPDATE users SET score = ? WHERE id = ?", (new_score, user_id))
         db.commit()
 
+    @staticmethod
+    def update_school_email(user_id, school_email):
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute("UPDATE users SET school_email = ? WHERE id = ?", (school_email, user_id))
+        db.commit()
+
+    @staticmethod
+    def update_profile(user_id, name, phone):
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute("UPDATE users SET name = ?, phone = ? WHERE id = ?", (name, phone, user_id))
+        db.commit()
+
+
 class Verification:
     @staticmethod
-    def create(user_id, id_card_path, title_deed_path):
+    def create(user_id, id_card_path, title_deed_path, owner_name=None, property_address=None, status='pending', ai_report=None):
         db = get_db()
         cursor = db.cursor()
         cursor.execute(
-            "INSERT INTO verifications (user_id, id_card_path, title_deed_path) VALUES (?, ?, ?)",
-            (user_id, id_card_path, title_deed_path)
+            """INSERT INTO verifications 
+               (user_id, id_card_path, title_deed_path, owner_name, property_address, status, ai_report) 
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (user_id, id_card_path, title_deed_path, owner_name, property_address, status, ai_report)
         )
         db.commit()
         return cursor.lastrowid

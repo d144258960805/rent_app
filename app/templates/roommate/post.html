@@ -1,0 +1,29 @@
+{% extends 'layout.html' %}
+
+{% block title %}發表揪團找室友公告 - 逢甲租屋網{% endblock %}
+
+{% block content %}
+<div class="form-card" style="max-width: 600px;">
+    <h2 class="form-title" style="color: var(--success);">📢 發布找室友公告</h2>
+    
+    <div style="background-color: var(--success-light); border: 1.5px solid var(--success); color: #065f46; padding: 0.75rem; border-radius: 4px; font-size: 0.85rem; margin-bottom: 1.5rem; text-align: center; font-weight: 500;">
+        🛡️ 驗證提示：您的帳號已成功認證逢甲官方信箱，具備發文資格。
+    </div>
+
+    <form method="post" action="{{ url_for('roommate.post') }}">
+        <div class="form-group">
+            <label for="title">公告標題 *</label>
+            <input type="text" id="title" name="title" class="form-input" placeholder="例如：福星路獨立套房求合租 / 西屯整層三房徵一位室友" required>
+        </div>
+
+        <div class="form-group">
+            <label for="content">徵求內容詳述 *</label>
+            <textarea id="content" name="content" class="form-textarea" placeholder="請詳細寫出：&#10;1. 房屋大略位置與租金分攤&#10;2. 希望室友的作息習慣（如不抽菸、不帶異性、愛乾淨）&#10;3. 公共水電分攤方式與合約期間..." rows="6" required></textarea>
+        </div>
+
+        <button type="submit" class="btn-primary" style="background-color: var(--success); margin-top: 1rem;">
+            🚀 發表揪團公告
+        </button>
+    </form>
+</div>
+{% endblock %}

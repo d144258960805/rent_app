@@ -3,36 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>逢甲租屋網 MVP</title>
-    <style>
-        body { font-family: sans-serif; margin: 0; padding: 0; background-color: #f4f4f9; color: #333; }
-        header { background-color: #0056b3; color: white; padding: 1rem; }
-        nav a { color: white; text-decoration: none; margin-right: 15px; font-weight: bold; }
-        nav a:hover { text-decoration: underline; }
-        .container { max-width: 800px; margin: 2rem auto; padding: 1rem; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .flash { padding: 10px; margin-bottom: 1rem; border-radius: 4px; }
-        .flash.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .flash.error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-    </style>
+    <title>{% block title %}逢甲租屋網 - 重生之我在逢甲找房子{% endblock %}</title>
+    <!-- Outfit & Noto Sans TC fonts -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
 </head>
 <body>
     <header>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h1 style="margin: 0; font-size: 1.5rem;">逢甲租屋網</h1>
+        <div class="nav-container">
+            <h1>
+                <a href="/">
+                    🏠 逢甲租屋網
+                </a>
+            </h1>
             <nav>
-                <a href="/">首頁</a>
+                <a href="/" class="{% if request.path == '/' %}active{% endif %}">首頁房源</a>
+                <a href="{{ url_for('roommate.list_posts') }}" class="{% if '/roommate' in request.path %}active{% endif %}">揪團找室友</a>
+                
                 {% if session.get('user_id') %}
-                    <span>你好，{{ session.get('user_name') }} ({{ session.get('user_role') }})</span>
+                    <div class="user-nav-info">
+                        👤 {{ session.get('user_name') }}
+                        {% if session.get('user_role') == 'landlord' %}
+                            <span class="score-badge high">房東</span>
+                        {% elif session.get('user_role') == 'admin' %}
+                            <span class="score-badge high" style="background-color:#c084fc; color:white;">管理者</span>
+                        {% else %}
+                            <span class="score-badge high" style="background-color:#60a5fa; color:white;">學生</span>
+                        {% endif %}
+                    </div>
+                    
+                    <a href="{{ url_for('auth.profile') }}" class="{% if request.path == '/auth/profile' %}active{% endif %}">個人控制台</a>
+                    
                     {% if session.get('user_role') == 'landlord' %}
-                        <a href="{{ url_for('property.post') }}">刊登房源</a>
+                        <a href="{{ url_for('property.post') }}" style="background-color: var(--accent); color: #1e293b; font-weight: 700; border-radius: 4px;">刊登房源</a>
                     {% endif %}
                     {% if session.get('user_role') == 'admin' %}
-                        <a href="{{ url_for('auth.admin_review') }}">後台審核</a>
+                        <a href="{{ url_for('auth.admin_review') }}" style="background-color: #a855f7; color: white;">後台審核</a>
                     {% endif %}
-                    <a href="{{ url_for('auth.logout') }}">登出</a>
+                    <a href="{{ url_for('auth.logout') }}" style="opacity: 0.8;">登出</a>
                 {% else %}
                     <a href="{{ url_for('auth.login') }}">登入</a>
-                    <a href="{{ url_for('auth.register') }}">註冊</a>
+                    <a href="{{ url_for('auth.register') }}" style="background-color: white; color: var(--primary); font-weight: 700;">免費註冊</a>
                 {% endif %}
             </nav>
         </div>
@@ -41,9 +51,19 @@
     <div class="container">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                {% for category, message in messages %}
-                    <div class="flash {{ category }}">{{ message }}</div>
-                {% endfor %}
+                <div class="flash-container">
+                    {% for category, message in messages %}
+                        <div class="flash {{ category }}">
+                            {% if category == 'success' %}
+                                 {{ message }}
+                            {% elif category == 'error' %}
+                                ❌ {{ message }}
+                            {% else %}
+                                ⚠️ {{ message }}
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
             {% endif %}
         {% endwith %}
 
