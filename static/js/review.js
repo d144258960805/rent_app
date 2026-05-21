@@ -13,6 +13,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const removeImageBtn = document.getElementById('removeImageBtn');
     const toast = document.getElementById('toast');
 
+    const reviewsList = document.querySelector('.reviews-list');
+    const currentRoomId = document.getElementById('currentRoomId').value;
+    
+    // Lightbox Elements
+    const lightboxModal = document.getElementById('lightboxModal');
+    const lightboxImage = document.getElementById('lightboxImage');
+    const closeLightboxBtn = document.getElementById('closeLightboxBtn');
+
     // Modal Logic
     const openModal = () => {
         modal.classList.add('active');
@@ -86,6 +94,165 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000);
     }
 
+    // Relative Time Formatter (Handles SQLite UTC timestamps)
+    function formatTime(timeStr) {
+        if (!timeStr) return '';
+        const parts = timeStr.match(/(\d+)-(\d+)-(\d+)\s+(\d+):(\d+):(\d+)/);
+        if (!parts) return timeStr;
+        
+        // SQLite stores CURRENT_TIMESTAMP in UTC
+        const utcDate = new Date(Date.UTC(
+            parseInt(parts[1]),
+            parseInt(parts[2]) - 1,
+            parseInt(parts[3]),
+            parseInt(parts[4]),
+            parseInt(parts[5]),
+            parseInt(parts[6])
+        ));
+        
+        const now = new Date();
+        const diffMs = now - utcDate;
+        const diffSec = Math.floor(diffMs / 1000);
+        
+        if (diffSec < 60) {
+            return '剛剛';
+        }
+        const diffMin = Math.floor(diffSec / 60);
+        if (diffMin < 60) {
+            return `${diffMin} 分鐘前`;
+        }
+        const diffHr = Math.floor(diffMin / 60);
+        if (diffHr < 24) {
+            return `${diffHr} 小時前`;
+        }
+        const diffDay = Math.floor(diffHr / 24);
+        if (diffDay < 7) {
+            return `${diffDay} 天前`;
+        }
+        
+        return utcDate.toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    }
+
+    // HTML Escape Helper
+    function escapeHTML(str) {
+        return str.replace(/[&<>'"]/g, 
+            tag => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;',
+                '"': '&quot;'
+            }[tag] || tag)
+        );
+    }
+
+    // Render Reviews list
+    const renderReviews = (reviews) => {
+        if (!reviews || reviews.length === 0) {
+            reviewsList.innerHTML = '<p class="empty-state">目前還沒有評論，成為第一個留下真實評價的租客吧！</p>';
+            return;
+        }
+
+        reviewsList.innerHTML = reviews.map((review, index) => {
+            const avatarChar = '匿';
+            const relativeTime = formatTime(review.created_at);
+            const imageHtml = review.image_url 
+                ? `<div class="review-image-thumbnail">
+                     <img src="${review.image_url}" alt="評論圖片" class="review-thumb-img">
+                   </div>`
+                : '';
+            
+            const gradientIndex = review.id % 4;
+            const gradients = [
+                'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+                'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                'linear-gradient(135deg, #10b981 0%, #047857 100%)',
+                'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
+            ];
+            const avatarStyle = `style="background: ${gradients[gradientIndex]};"`;
+            const animationStyle = `style="animation-delay: ${index * 0.08}s;"`;
+
+            return `
+                <div class="review-card" ${animationStyle}>
+                    <div class="review-card-header">
+                        <div class="reviewer-info">
+                            <div class="avatar" ${avatarStyle}>${avatarChar}</div>
+                            <div>
+                                <div class="reviewer-name">匿名逢甲學生</div>
+                                <div class="review-time">${relativeTime}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="review-content">${escapeHTML(review.content)}</div>
+                    ${imageHtml}
+                </div>
+            `;
+        }).join('');
+        
+        attachThumbnailListeners();
+    };
+
+    // Fetch reviews from API
+    const fetchReviews = async () => {
+        try {
+            const response = await fetch(`/api/reviews?room_id=${currentRoomId}`);
+            if (response.ok) {
+                const reviews = await response.json();
+                renderReviews(reviews);
+            } else {
+                console.error('無法載入評論資料');
+            }
+        } catch (error) {
+            console.error('載入評論時發生網路錯誤:', error);
+        }
+    };
+
+    // Lightbox popup handlers
+    function attachThumbnailListeners() {
+        const thumbnails = document.querySelectorAll('.review-thumb-img');
+        thumbnails.forEach(thumb => {
+            thumb.addEventListener('click', () => {
+                lightboxImage.src = thumb.src;
+                lightboxModal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            });
+        });
+    }
+
+    const closeLightbox = () => {
+        lightboxModal.classList.remove('active');
+        document.body.style.overflow = '';
+        setTimeout(() => {
+            lightboxImage.src = '';
+        }, 300);
+    };
+
+    closeLightboxBtn.addEventListener('click', closeLightbox);
+    lightboxModal.addEventListener('click', (e) => {
+        if (e.target === lightboxModal) {
+            closeLightbox();
+        }
+    });
+
+    // Main gallery image click to zoom
+    const mainGalleryImg = document.querySelector('.gallery-main img');
+    if (mainGalleryImg) {
+        mainGalleryImg.style.cursor = 'zoom-in';
+        mainGalleryImg.addEventListener('click', () => {
+            lightboxImage.src = mainGalleryImg.src;
+            lightboxModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+    }
+
+    // Global Key Listener for ESC key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeModal();
+            closeLightbox();
+        }
+    });
+
     // Form Submit Logic
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -107,9 +274,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok) {
                 showToast(result.message);
                 closeModal();
-                
-                // Optional: dynamically add the review to the DOM here
-                // For demo, we just reload the page or show toast
+                // Reload comment list dynamically without page reload
+                fetchReviews();
             } else {
                 showToast(result.error || '上傳失敗', true);
             }
@@ -121,4 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.disabled = false;
         }
     });
+
+    // Initial load of reviews
+    fetchReviews();
 });
