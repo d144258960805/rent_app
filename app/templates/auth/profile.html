@@ -1,0 +1,225 @@
+{% extends 'layout.html' %}
+
+{% block title %}個人控制台 - 逢甲租屋網{% endblock %}
+
+{% block content %}
+<div class="profile-grid">
+    <!-- Left Column: User Profile & Credit Gauge -->
+    <div>
+        <!-- Profile details -->
+        <div class="detail-main" style="margin-bottom: 2rem;">
+            <h3 style="font-weight: 700; margin-bottom: 1.25rem; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem;">
+                👤 編輯個人檔案資料
+            </h3>
+            
+            <form method="post" action="{{ url_for('auth.update_profile') }}">
+                <div class="form-group" style="margin-bottom: 0.75rem;">
+                    <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">真實姓名 *</label>
+                    <input type="text" name="name" value="{{ user.name }}" class="form-input" required style="padding: 0.5rem;">
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 0.75rem;">
+                    <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">帳號 Email (不可修改)</label>
+                    <input type="email" value="{{ user.email }}" class="form-input" disabled style="padding: 0.5rem; background-color: #f1f5f9; cursor: not-allowed;">
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 0.75rem;">
+                    <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">聯絡電話</label>
+                    <input type="text" name="phone" value="{{ user.phone or '' }}" placeholder="如：0912-345678" class="form-input" style="padding: 0.5rem;">
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">註冊身分</label>
+                    <div>
+                        {% if user.role == 'landlord' %}
+                            <span class="score-badge high" style="padding: 0.25rem 0.75rem;">🏠 房東身分</span>
+                        {% elif user.role == 'admin' %}
+                            <span class="score-badge high" style="background-color:#c084fc; color:white; padding: 0.25rem 0.75rem;">⚙️ 系統管理者</span>
+                        {% else %}
+                            <span class="score-badge high" style="background-color:#60a5fa; color:white; padding: 0.25rem 0.75rem;">🎓 學生身分</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn-primary" style="width: 100%; padding: 0.6rem; font-size: 0.9rem; font-weight: 600; margin-top: 0.5rem;">💾 儲存基本資料變更</button>
+            </form>
+
+
+            <!-- Landlord Validation Badge for Landlords -->
+            {% if user.role == 'landlord' %}
+                <div style="border-top: 1px dashed var(--border); margin-top: 1.5rem; padding-top: 1rem;">
+                    <strong style="display: block; margin-bottom: 8px; font-size: 0.95rem;">🤖 AI 聯網地籍防詐審核狀態：</strong>
+                    {% if verification %}
+                        {% if verification.status == 'approved' %}
+                            <div style="background-color: var(--success-light); border: 1.5px solid var(--success); color: #065f46; padding: 0.75rem; border-radius: 4px; font-size: 0.9rem; font-weight: 600; text-align: center;">
+                                ✅ 實名身分與地政權狀審核：【合格已通關】
+                            </div>
+                        {% elif verification.status == 'pending' %}
+                            <div style="background-color: var(--warning-light); border: 1.5px solid var(--warning); color: #92400e; padding: 0.75rem; border-radius: 4px; font-size: 0.9rem; font-weight: 600; text-align: center;">
+                                ⏳ 證明文件審核中，請耐心等候
+                            </div>
+                        {% else %}
+                            <div style="background-color: var(--error-light); border: 1.5px solid var(--error); color: #991b1b; padding: 0.75rem; border-radius: 4px; font-size: 0.9rem; font-weight: 600; text-align: center; margin-bottom: 8px;">
+                                ❌ 實名地產審核：【退件不合格】
+                            </div>
+                            <a href="{{ url_for('auth.upload_docs') }}" class="btn-primary" style="font-size: 0.85rem; padding: 0.5rem; text-align: center; display: block; margin-bottom: 8px;">重新上傳審核文件</a>
+                        {% endif %}
+
+                        {% if verification.ai_report %}
+                            <div class="ai-report-panel" style="margin-top: 1rem; text-align: left; font-family: 'Courier New', Courier, monospace; font-size: 0.85rem; background-color: #0f172a; border-radius: 8px; padding: 1.25rem; overflow-x: auto; white-space: pre-wrap; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+                                {% if verification.status == 'approved' %}
+                                    color: #34d399; border: 1.5px solid #10b981;
+                                {% else %}
+                                    color: #f87171; border: 1.5px solid #ef4444;
+                                {% endif %}
+                            ">{{ verification.ai_report }}</div>
+                        {% endif %}
+                    {% else %}
+                        <div style="background-color: #f1f5f9; border: 1.5px solid var(--border); padding: 0.75rem; border-radius: 4px; text-align: center; font-size: 0.9rem;">
+                            ⚠️ 您尚未提交房東身分證與房屋權狀審核，暫時無法刊登房源。
+                            <a href="{{ url_for('auth.upload_docs') }}" class="btn-primary" style="font-size: 0.85rem; padding: 0.5rem; margin-top: 8px; text-align: center; display: block;">啟動 AI 聯網地產實名認證</a>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Credit Meter Showcase -->
+        <div class="score-display-card">
+            <h4 style="font-weight: 600; opacity: 0.9; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 1px;">
+                🛡️ 雙向信用實名評分
+            </h4>
+            <div class="score-value">{{ user.score }}</div>
+            <p style="font-size: 0.85rem; opacity: 0.8; line-height: 1.4;">
+                評分機制：基礎分 100 分。準時收交租或快速排障可獲加分；惡意違約或不實回報將扣除 25 分。低於 80 分將自動凍結刊登或看房預約權限。
+            </p>
+
+            <!-- Simulation Controls (F-05 & F-07 Testing) -->
+            <div class="score-sim-panel">
+                <span style="font-size: 0.8rem; font-weight: 700; color: #94a3b8; display: block; margin-bottom: 10px; text-transform: uppercase;">
+                    🧪 MVP 評審功能測試模擬器
+                </span>
+                <form method="post" action="{{ url_for('auth.update_demo_score') }}">
+                    <button type="submit" name="action" value="add" class="score-sim-btn add">👍 模擬加分：守信付租/快速維修 (+5 分)</button>
+                    <button type="submit" name="action" value="deduct" class="score-sim-btn deduct">⚠️ 模擬扣分：惡意違約/不實舉報 (-25 分)</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: School email and My Items List -->
+    <div>
+        <!-- Student School Email Verification -->
+        {% if user.role == 'student' %}
+            <div class="detail-main" style="margin-bottom: 2rem;">
+                <h3 style="font-weight: 700; margin-bottom: 1.25rem; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem;">
+                    🎓 逢甲大學官方信箱認證 (F-06)
+                </h3>
+                
+                {% if user.school_email %}
+                    <div style="background-color: var(--success-light); border: 1.5px solid var(--success); color: #065f46; padding: 1rem; border-radius: 4px;">
+                        🎉 <strong>認證已通過</strong><br>
+                        您的逢甲信箱已成功綁定為：<code>{{ user.school_email }}</code>。您現在擁有完整的揪團找室友、留言板發言及留言權限。
+                    </div>
+                {% else %}
+                    <div style="background-color: var(--warning-light); border: 1.5px solid var(--warning); color: #92400e; padding: 1rem; border-radius: 4px; margin-bottom: 1.25rem; font-size: 0.9rem;">
+                        🔒 <strong>信箱尚未綁定</strong><br>
+                        為了保障學生安全與租屋真實度，找室友討論區及留言板限逢甲大學在校生留言。請輸入您的官方學生信箱驗證解鎖。
+                    </div>
+                    
+                    <form method="post" action="{{ url_for('auth.verify_school_email') }}">
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <input type="email" name="school_email" placeholder="學號信箱（如：d1123456@mail.fcu.edu.tw）" class="form-input" required>
+                        </div>
+                        <button type="submit" class="btn-primary" style="width: auto; padding: 0.5rem 1.5rem; font-size: 0.9rem;">綁定並驗證信箱</button>
+                    </form>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        <!-- Lists of items -->
+        <div class="detail-main">
+            {% if user.role == 'landlord' %}
+                <h3 style="font-weight: 700; margin-bottom: 1.25rem; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+                    <span>🏠 我刊登的房源 ({% if properties %}{{ properties|length }}{% else %}0{% endif %} 筆)</span>
+                    {% if user.score >= 80 %}
+                        <a href="{{ url_for('property.post') }}" style="font-size: 0.85rem; font-weight: 500;">+ 刊登新房源</a>
+                    {% endif %}
+                </h3>
+                
+                {% if properties %}
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        {% for p in properties %}
+                            <div style="display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); padding: 1rem; border-radius: var(--radius-sm); background-color: var(--bg-main);">
+                                <div>
+                                    <strong style="font-size: 1rem; display: block;">{{ p.title }}</strong>
+                                    <span style="font-size: 0.8rem; color: var(--text-muted);">
+                                        📍 {{ p.address }} | 📏 {{ p.size }} 坪 | 💲 月租 {{ p.rent }} 元
+                                    </span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                    {% if p.status == 'active' %}
+                                        <span class="score-badge high" style="background-color: var(--success-light); color: var(--success); border: 1px solid var(--success); padding: 0.2rem 0.5rem; font-size: 0.8rem;">🏡 待租/刊登中</span>
+                                    {% else %}
+                                        <span class="score-badge danger" style="background-color: #f1f5f9; color: var(--text-muted); border: 1px solid var(--border); padding: 0.2rem 0.5rem; font-size: 0.8rem;">🔑 已租出/下架</span>
+                                    {% endif %}
+                                    
+                                    <form method="post" action="{{ url_for('property.toggle_status', property_id=p.id) }}" style="display: inline; margin: 0;">
+                                        <button type="submit" class="btn-primary" style="font-size: 0.75rem; padding: 4px 8px; width: auto; background-color: var(--text-main); margin: 0;">
+                                            {% if p.status == 'active' %}
+                                                設為已租出
+                                            {% else %}
+                                                重新上架
+                                            {% endif %}
+                                        </button>
+                                    </form>
+                                    
+                                    <a href="{{ url_for('property.detail', property_id=p.id) }}" class="btn-primary" style="font-size: 0.75rem; padding: 4px 8px; width: auto; margin: 0; background-color: transparent; border: 1px solid var(--border); color: var(--text-main);">
+                                        👁️ 查看
+                                    </a>
+                                </div>
+
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p style="color: var(--text-muted); text-align: center; padding: 2rem;">您目前尚未刊登任何房源資訊。</p>
+                {% endif %}
+                
+            {% elif user.role == 'student' %}
+                <h3 style="font-weight: 700; margin-bottom: 1.25rem; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+                    <span>📢 我的揪團找室友公告 ({% if roommates %}{{ roommates|length }}{% else %}0{% endif %} 筆)</span>
+                    {% if user.school_email %}
+                        <a href="{{ url_for('roommate.post') }}" style="font-size: 0.85rem; font-weight: 500;">+ 發布新徵友</a>
+                    {% endif %}
+                </h3>
+                
+                {% if roommates %}
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        {% for r in roommates %}
+                            <div style="display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); padding: 1rem; border-radius: var(--radius-sm); background-color: var(--bg-main);">
+                                <div>
+                                    <strong style="font-size: 1rem; display: block;">{{ r.title }}</strong>
+                                    <span style="font-size: 0.8rem; color: var(--text-muted);">
+                                        📆 發表於 {{ r.created_at }}
+                                    </span>
+                                </div>
+                                <div>
+                                    {% if r.status == 'open' %}
+                                        <span class="roommate-status open">徵求中</span>
+                                    {% else %}
+                                        <span class="roommate-status closed">已結案</span>
+                                    {% endif %}
+                                    <a href="{{ url_for('roommate.detail', post_id=r.id) }}" style="margin-left: 10px; font-size: 0.85rem;">管理回覆</a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p style="color: var(--text-muted); text-align: center; padding: 2rem;">您尚未發表過揪團找室友公告。</p>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
