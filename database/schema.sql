@@ -1,30 +1,17 @@
--- database/schema.sql
-
+-- 使用者表 (包含學生與房東)
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL,
     email TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
-    name TEXT NOT NULL,
     role TEXT NOT NULL CHECK(role IN ('student', 'landlord', 'admin')),
-    phone TEXT,
-    school_email TEXT,
-    score INTEGER DEFAULT 100,
+    points INTEGER DEFAULT 100,
+    is_verified BOOLEAN DEFAULT 0,
+    document_url TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS verifications (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    id_card_path TEXT NOT NULL,
-    title_deed_path TEXT NOT NULL,
-    status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'approved', 'rejected')),
-    submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    reviewed_at DATETIME,
-    reviewer_id INTEGER,
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (reviewer_id) REFERENCES users(id)
-);
-
+-- 房源表
 CREATE TABLE IF NOT EXISTS properties (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     landlord_id INTEGER NOT NULL,

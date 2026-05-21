@@ -172,6 +172,3 @@ cython_debug/
 .Trashes
 ehthumbs.db
 Thumbs.db
-
-# User uploads
-app/static/uploads/

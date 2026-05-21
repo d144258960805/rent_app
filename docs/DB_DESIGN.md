@@ -1,157 +1,125 @@
-# 資料庫設計 (DB Schema)
+# 資料庫設計 (DB DESIGN)
 
-**專案名稱**：逢甲租屋網 (Feng Chia Rental Platform)
-
-本文件依據 PRD 所定義的功能需求，規劃 SQLite 資料表的結構與關聯。
-
----
-
-## 1. ER 圖（實體關係圖）
+## 1. ER 圖 (實體關係圖)
 
 ```mermaid
 erDiagram
     USERS {
-        integer id PK
-        string email
-        string password_hash
-        string name
-        string role "student, landlord, admin"
-        string phone
-        string school_email "for student auth"
-        integer score "default 100"
-        datetime created_at
+        INTEGER id PK
+        TEXT username
+        TEXT email
+        TEXT password_hash
+        TEXT role
+        INTEGER points
+        BOOLEAN is_verified
+        TEXT document_url
+        DATETIME created_at
     }
-
-    VERIFICATIONS {
-        integer id PK
-        integer user_id FK
-        string id_card_path
-        string title_deed_path
-        string status "pending, approved, rejected"
-        datetime submitted_at
-        datetime reviewed_at
-        integer reviewer_id FK
-    }
-
+    
     PROPERTIES {
-        integer id PK
-        integer landlord_id FK
-        string title
-        string description
-        integer rent
-        string room_type "套房, 雅房, 整層"
-        integer size "坪數"
-        boolean subsidy_available "是否可租補"
-        string address
-        string status "active, inactive"
-        datetime created_at
+        INTEGER id PK
+        INTEGER landlord_id FK
+        TEXT title
+        TEXT description
+        INTEGER price
+        TEXT room_type
+        REAL size
+        BOOLEAN has_subsidy
+        BOOLEAN inc_water
+        BOOLEAN inc_internet
+        BOOLEAN inc_management
+        BOOLEAN inc_cleaning
+        TEXT building_type
+        BOOLEAN is_rooftop
+        INTEGER distance_to_fcu
+        TEXT fcu_zone
+        TEXT equipments
+        TEXT landlord_type
+        BOOLEAN is_certified
+        TEXT tags
+        TEXT address
+        DATETIME created_at
     }
-
-    TAGS {
-        integer id PK
-        string name "e.g., 落地窗, 養寵物"
-    }
-
-    PROPERTY_TAGS {
-        integer property_id FK
-        integer tag_id FK
-    }
-
+    
     REVIEWS {
-        integer id PK
-        integer property_id FK
-        integer author_id FK
-        string content
-        string image_path
-        integer rating "1-5"
-        datetime created_at
+        INTEGER id PK
+        INTEGER property_id FK
+        INTEGER student_id FK
+        INTEGER rating
+        TEXT comment
+        TEXT image_url
+        DATETIME created_at
     }
-
+    
     ROOMMATE_POSTS {
-        integer id PK
-        integer author_id FK
-        string title
-        string content
-        string status "open, closed"
-        datetime created_at
+        INTEGER id PK
+        INTEGER student_id FK
+        TEXT title
+        TEXT content
+        TEXT status
+        DATETIME created_at
     }
 
-    USERS ||--o| VERIFICATIONS : "submits"
-    USERS ||--o{ PROPERTIES : "owns"
+    USERS ||--o{ PROPERTIES : "owns (landlord)"
+    USERS ||--o{ REVIEWS : "writes (student)"
     PROPERTIES ||--o{ REVIEWS : "has"
-    USERS ||--o{ REVIEWS : "writes"
-    PROPERTIES ||--o{ PROPERTY_TAGS : "tagged_with"
-    TAGS ||--o{ PROPERTY_TAGS : "applied_to"
-    USERS ||--o{ ROOMMATE_POSTS : "creates"
+    USERS ||--o{ ROOMMATE_POSTS : "posts (student)"
 ```
-
----
 
 ## 2. 資料表詳細說明
 
 ### 2.1 USERS (使用者表)
-儲存所有平台使用者，包含學生、房東與系統管理員。
-- `id` (INTEGER): Primary Key, 自動遞增。
-- `email` (TEXT): 登入帳號，必填，唯一。
-- `password_hash` (TEXT): 密碼雜湊值，必填。
-- `name` (TEXT): 顯示名稱，必填。
-- `role` (TEXT): 身分，允許值：`student`, `landlord`, `admin`。
-- `phone` (TEXT): 聯絡電話。
-- `school_email` (TEXT): 逢甲信箱，用於 F-06 揪團找室友功能驗證。
-- `score` (INTEGER): 信用積分，預設為 100。低於 80 限制權限 (F-07)。
-- `created_at` (DATETIME): 建立時間。
+儲存學生與房東的帳號資料，並包含信用積分與身分驗證狀態。
+- `id` (INTEGER): 主鍵，自動遞增。
+- `username` (TEXT): 顯示名稱。
+- `email` (TEXT): 電子郵件 (學生用於認證逢甲信箱)。
+- `password_hash` (TEXT): 加密後的密碼。
+- `role` (TEXT): 角色，'student' 或 'landlord'。
+- `points` (INTEGER): 雙向信用評分積分 (預設 100)。
+- `is_verified` (BOOLEAN): 是否通過身分驗證 (房東需審核)。
+- `document_url` (TEXT): 房東上傳的證明文件路徑 (審核用)。
+- `created_at` (DATETIME): 帳號建立時間。
 
-### 2.2 VERIFICATIONS (身分驗證表)
-用於 F-04 房東身分驗證，記錄上傳的證明文件與審核狀態。
-- `id` (INTEGER): Primary Key。
-- `user_id` (INTEGER): 申請的房東 ID (Foreign Key -> USERS.id)。
-- `id_card_path` (TEXT): 身分證影本的檔案路徑，必填。
-- `title_deed_path` (TEXT): 權狀影本的檔案路徑，必填。
-- `status` (TEXT): 審核狀態，允許值：`pending`, `approved`, `rejected`。
-- `submitted_at` (DATETIME): 提交時間。
-- `reviewed_at` (DATETIME): 審核完成時間。
-- `reviewer_id` (INTEGER): 審核的管理員 ID (Foreign Key -> USERS.id)。
+### 2.2 PROPERTIES (房源表)
+儲存房東刊登的房源資訊。
+- `id` (INTEGER): 主鍵，自動遞增。
+- `landlord_id` (INTEGER): 外鍵，對應 USERS.id。
+- `title` (TEXT): 房源標題。
+- `description` (TEXT): 房源詳細說明。
+- `price` (INTEGER): 每月租金。
+- `room_type` (TEXT): 房型 (如：雅房、分租套房、獨立套房)。
+- `size` (REAL): 坪數。
+- `has_subsidy` (BOOLEAN): 是否可申請租屋補助。
+- `inc_water` (BOOLEAN): 是否包水費。
+- `inc_internet` (BOOLEAN): 是否包網路費。
+- `inc_management` (BOOLEAN): 是否包管理費。
+- `inc_cleaning` (BOOLEAN): 是否包清潔費。
+- `building_type` (TEXT): 建物類型 (電梯大樓, 公寓, 透天厝)。
+- `is_rooftop` (BOOLEAN): 是否為頂樓加蓋。
+- `distance_to_fcu` (INTEGER): 距離逢甲步行時間(分鐘)。
+- `fcu_zone` (TEXT): 鄰近區域 (正門, 側門, 商圈, 僑光, 水湳)。
+- `equipments` (TEXT): 設備清單 (如：冷氣,冰箱,垃圾代收,對外窗)。
+- `landlord_type` (TEXT): 房東類型 (房東直租, 代管公司)。
+- `is_certified` (BOOLEAN): 是否已認證權狀。
+- `tags` (TEXT): 逗號分隔的標籤 (如：養寵物,乾濕分離)。
+- `address` (TEXT): 房屋地址 (供地圖功能使用)。
+- `created_at` (DATETIME): 刊登時間。
 
-### 2.3 PROPERTIES (房源表)
-儲存房東刊登的租屋資訊。
-- `id` (INTEGER): Primary Key。
-- `landlord_id` (INTEGER): 房東 ID (Foreign Key -> USERS.id)。
-- `title` (TEXT): 房源標題，必填。
-- `description` (TEXT): 詳細說明。
-- `rent` (INTEGER): 每月租金，必填。
-- `room_type` (TEXT): 房型，如「獨立套房」、「分租套房」、「雅房」、「整層住家」。
-- `size` (INTEGER): 坪數。
-- `subsidy_available` (BOOLEAN): 是否可申請租金補貼。
-- `address` (TEXT): 房屋地址。
-- `status` (TEXT): 狀態，如 `active` (刊登上架中), `inactive` (已下架)。
-- `created_at` (DATETIME): 建立時間。
-
-### 2.4 TAGS (標籤表)
-用於 F-02 關鍵字標籤搜尋。
-- `id` (INTEGER): Primary Key。
-- `name` (TEXT): 標籤名稱（如：落地窗、採光好、養寵物），必填，唯一。
-
-### 2.5 PROPERTY_TAGS (房源與標籤關聯表)
-紀錄房源具備哪些標籤（多對多關係）。
-- `property_id` (INTEGER): Foreign Key -> PROPERTIES.id。
-- `tag_id` (INTEGER): Foreign Key -> TAGS.id。
-- Primary Key (property_id, tag_id)。
-
-### 2.6 REVIEWS (評論表)
-用於 F-03 學生匿名上傳實際圖片與賞屋評論。
-- `id` (INTEGER): Primary Key。
-- `property_id` (INTEGER): 評論的房源 ID (Foreign Key -> PROPERTIES.id)。
-- `author_id` (INTEGER): 留言者 ID (Foreign Key -> USERS.id)。
-- `content` (TEXT): 評論內容。
-- `image_path` (TEXT): 實際圖片的檔案路徑。
+### 2.3 REVIEWS (評論表)
+學生對房源的賞屋心得或真實評論 (可匿名上傳)。
+- `id` (INTEGER): 主鍵，自動遞增。
+- `property_id` (INTEGER): 外鍵，對應 PROPERTIES.id。
+- `student_id` (INTEGER): 外鍵，對應 USERS.id。
 - `rating` (INTEGER): 評分 (1-5 顆星)。
-- `created_at` (DATETIME): 建立時間。
+- `comment` (TEXT): 評論內容。
+- `image_url` (TEXT): 實際圖片路徑 (選填)。
+- `created_at` (DATETIME): 評論時間。
 
-### 2.7 ROOMMATE_POSTS (徵室友文章表)
-用於 F-06 揪團找室友區。
-- `id` (INTEGER): Primary Key。
-- `author_id` (INTEGER): 發文者 ID (Foreign Key -> USERS.id)。
-- `title` (TEXT): 文章標題，必填。
-- `content` (TEXT): 文章內容，必填。
-- `status` (TEXT): 狀態，允許值：`open` (徵求中), `closed` (已找到)。
-- `created_at` (DATETIME): 建立時間。
+### 2.4 ROOMMATE_POSTS (徵室友表)
+逢甲信箱認證學生專屬的徵室友佈告欄。
+- `id` (INTEGER): 主鍵，自動遞增。
+- `student_id` (INTEGER): 外鍵，對應 USERS.id。
+- `title` (TEXT): 貼文標題。
+- `content` (TEXT): 尋找室友的詳細條件與說明。
+- `status` (TEXT): 狀態 ('open' 或 'closed')。
+- `created_at` (DATETIME): 發文時間。
