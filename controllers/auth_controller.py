@@ -4,6 +4,7 @@ from database.db import get_db_connection
 class Session:
     """管理當前應用程式的登入狀態 (簡單的單例模式概念)"""
     _current_user = None
+    _selected_property_id = None
 
     @classmethod
     def login_user(cls, user_data):
@@ -20,6 +21,14 @@ class Session:
     @classmethod
     def is_logged_in(cls):
         return cls._current_user is not None
+
+    @classmethod
+    def set_selected_property_id(cls, property_id):
+        cls._selected_property_id = property_id
+
+    @classmethod
+    def get_selected_property_id(cls):
+        return cls._selected_property_id
 
 
 class AuthController:
