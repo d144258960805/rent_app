@@ -14,7 +14,7 @@ class MainApp(ctk.CTk):
         super().__init__()
         
         self.title("逢甲租屋網 - 開發測試 (F-02 關鍵字搜尋)")
-        self.geometry("900x600")
+        self.geometry("980x720")
         
         # 設定整體主題
         ctk.set_appearance_mode("light")

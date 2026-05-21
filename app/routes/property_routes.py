@@ -6,8 +6,43 @@ property_bp = Blueprint('property_bp', __name__, url_prefix='/properties')
 
 @property_bp.route('/')
 def index():
-    properties = PropertyModel.get_all()
-    return render_template('properties/index.html', properties=properties)
+    keyword = request.args.get('keyword', '').strip()
+    tags = request.args.getlist('tags')
+    
+    # 呼叫 Model 進行標籤交集模糊搜尋
+    properties = PropertyModel.search(keyword=keyword, tags=tags)
+    
+    # 提供給 Web 前端渲染的分類標籤痛點資料
+    categories = [
+        {
+            "title": "空間與採光",
+            "desc": "隱私、安全與曬衣便利",
+            "tags": ["獨立陽台", "非頂加", "有外窗", "落地窗", "採光好"]
+        },
+        {
+            "title": "衛浴與生活",
+            "desc": "不追垃圾車、不共用洗衣機",
+            "tags": ["獨立洗衣機", "垃圾代收", "電梯大樓", "乾濕分離", "養寵物", "子母車"]
+        },
+        {
+            "title": "費用與合約",
+            "desc": "補貼與台水電大省錢！",
+            "tags": ["台水台電", "免仲介費", "可申請租補"]
+        },
+        {
+            "title": "周邊與交通",
+            "desc": "攸關通勤與遲到機率",
+            "tags": ["近捷運", "離校區5分內", "有小客車/機車位"]
+        }
+    ]
+    
+    return render_template(
+        'properties/index.html', 
+        properties=properties, 
+        keyword=keyword, 
+        selected_tags=tags,
+        categories=categories
+    )
 
 @property_bp.route('/create', methods=['GET', 'POST'])
 def create():
