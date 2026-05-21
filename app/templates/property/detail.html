@@ -1,0 +1,207 @@
+{% extends 'layout.html' %}
+
+{% block title %}{{ property.title }} - 逢甲租屋網{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+    <a href="/">← 返回房源清單</a>
+</div>
+
+<div class="detail-container">
+    <!-- Left Column: Details & Reviews -->
+    <div class="detail-main">
+        <h2 style="font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; color: var(--text-dark);">{{ property.title }}</h2>
+        <p style="color: var(--text-muted); font-size: 1rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 6px;">
+            📍 地址：{{ property.address }}
+        </p>
+
+        {% if property.image_path %}
+            <img src="{{ url_for('static', filename=property.image_path) }}" alt="{{ property.title }}" class="detail-image">
+        {% else %}
+            <div style="width:100%; height:320px; display:flex; justify-content:center; align-items:center; background:linear-gradient(135deg, #3b82f6, #1d4ed8); color:white; font-size:3rem; font-weight:800; border-radius: var(--radius-sm); margin-bottom:1.5rem;">
+                FCU ROOM
+            </div>
+        {% endif %}
+
+        <h3 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 0.75rem; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem;">🏠 屋況描述</h3>
+        <p style="white-space: pre-wrap; font-size: 1.05rem; color: #374151; margin-bottom: 2rem; line-height: 1.7;">
+            {{ property.description or '此房源尚無詳細文字描述。' }}
+        </p>
+
+        <h3 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 0.75rem; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem;">🏷️ 特色標籤</h3>
+        <div class="tags-cloud" style="margin-bottom: 2.5rem;">
+            {% if tags %}
+                {% for t in tags %}
+                    <span class="tag-badge active"># {{ t.name }}</span>
+                {% endfor %}
+            {% else %}
+                <span style="color: var(--text-muted);">無標籤</span>
+            {% endif %}
+        </div>
+
+        <!-- Simulated Map Location -->
+        <h3 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 0.75rem; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem;">📍 周邊定位 (FCU Map)</h3>
+        <div style="background-color: #f1f5f9; height: 180px; border-radius: var(--radius-sm); display: flex; flex-direction: column; justify-content: center; align-items: center; border: 1px solid var(--border); margin-bottom: 3rem;">
+            <span style="font-size: 2.5rem; margin-bottom: 0.5rem;">🗺️</span>
+            <strong style="color: var(--text-dark);">Google Maps 模擬定位</strong>
+            <span style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">距離「逢甲大學正校門」約 450 公尺（步行約 6 分鐘）</span>
+        </div>
+
+        <!-- Reviews Wall -->
+        <div class="reviews-section">
+            <h3 style="font-size: 1.4rem; font-weight: 800; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                <span>💬 賞屋及真實屋況評論牆</span>
+                {% if avg_rating > 0 %}
+                    <span style="font-size: 1rem; background-color: var(--primary-light); color: var(--primary); padding: 0.3rem 0.8rem; border-radius: 50px;">
+                        ⭐ 平均分數：{{ avg_rating }} / 5.0
+                    </span>
+                {% endif %}
+            </h3>
+
+            {% if reviews %}
+                {% for r in reviews %}
+                    <div class="review-card">
+                        <div class="review-header">
+                            <strong>👤 匿名逢甲學生 #{{ r.id * 13 % 100 }} ({{ r.author_role }})</strong>
+                            <span class="review-stars">
+                                {% for i in range(1, 6) %}
+                                    {% if i <= r.rating %}★{% else %}☆{% endif %}
+                                endfor
+                            </span>
+                        </div>
+                        <p style="color: #374151; font-size: 0.95rem;">{{ r.content }}</p>
+                        {% if r.image_path %}
+                            <a href="{{ url_for('static', filename=r.image_path) }}" target="_blank">
+                                <img src="{{ url_for('static', filename=r.image_path) }}" alt="實地照片" class="review-img">
+                            </a>
+                        {% endif %}
+                        <div style="font-size: 0.8rem; color: var(--text-muted); text-align: right; margin-top: 8px;">
+                            📆 上傳時間：{{ r.created_at }}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div style="background-color: var(--bg-main); text-align: center; padding: 2rem; border-radius: var(--radius-sm); border: 1px dashed var(--border); color: var(--text-muted); margin-bottom: 2rem;">
+                    目前尚無賞屋及屋況評論，歡迎成為第一個提供真實勘查回饋的人！
+                </div>
+            {% endif %}
+
+            <!-- Add Review Section -->
+            {% if session.get('user_id') and session.get('user_role') == 'student' %}
+                <div style="background-color: white; border: 1.5px solid var(--border); padding: 1.5rem; border-radius: var(--radius-sm); margin-top: 2rem;">
+                    <h4 style="font-weight: 700; margin-bottom: 1rem; font-size: 1.1rem;">✍️ 提供您對此房屋的實地勘查短評與照片</h4>
+                    <form method="post" action="{{ url_for('property.upload_review', property_id=property.id) }}" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="rating">選擇真實屋況星等</label>
+                            <select id="rating" name="rating" class="filter-select" required style="max-width: 200px;">
+                                <option value="5">⭐⭐⭐⭐⭐ 5星好屋</option>
+                                <option value="4">⭐⭐⭐⭐ 4星優良</option>
+                                <option value="3">⭐⭐⭐ 3星普通</option>
+                                <option value="2">⭐⭐ 2星落差</option>
+                                <option value="1">⭐ 1星極差 / 不實</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="content">實地勘查心得 / 真實評論</label>
+                            <textarea id="content" name="content" class="form-textarea" placeholder="請具體寫出真實屋況與宣傳的異同（例如水壓、採光、隔音情形等...）" required rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="review_image">📸 上傳真實賞屋/屋內相片 (供同學佐證防詐)</label>
+                            <input type="file" id="review_image" name="review_image" accept="image/*">
+                        </div>
+                        <button type="submit" class="btn-primary" style="width: auto; padding: 0.6rem 2rem;">送出真實評論</button>
+                    </form>
+                </div>
+            {% elif session.get('user_id') %}
+                <p style="color: var(--text-muted); font-size: 0.9rem; text-align: center; margin-top: 1rem;">
+                    🔒 只有註冊「學生」身分的用戶能夠上傳賞屋評論。
+                </p>
+            {% else %}
+                <div style="text-align: center; padding: 1rem; background-color: var(--warning-light); color: var(--warning); border-radius: 4px; font-size: 0.9rem;">
+                    🔑 請先 <a href="{{ url_for('auth.login') }}">登入</a> 帳號以留言、評分或上傳賞屋照片。
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Right Column: Sidebar -->
+    <div class="detail-sidebar">
+        <!-- Pricing Card -->
+        <div class="detail-main" style="border-top: 4px solid var(--error);">
+            <div class="meta-item" style="text-align: left; margin-bottom: 1.5rem;">
+                <div class="label" style="font-size: 0.9rem;">每月租金</div>
+                <div class="val" style="font-size: 2.2rem; color: var(--error); font-weight: 800;">
+                    ${{ "{:,}".format(property.rent) }} <span style="font-size: 1rem; color: var(--text-muted); font-weight: 400;">/ 月</span>
+                </div>
+            </div>
+
+            <div class="property-meta-grid" style="margin: 0 0 1.5rem 0;">
+                <div class="meta-item">
+                    <div class="label">房型</div>
+                    <div class="val">{{ property.room_type }}</div>
+                </div>
+                <div class="meta-item">
+                    <div class="label">坪數</div>
+                    <div class="val">{{ property.size }} 坪</div>
+                </div>
+                <div class="meta-item">
+                    <div class="label">租補</div>
+                    <div class="val">{% if property.subsidy_available %}可{% else %}否{% endif %}</div>
+                </div>
+            </div>
+
+            <!-- Booking Section (F-07 Score Check) -->
+            {% if session.get('user_id') %}
+                {% if user_score < 80 %}
+                    <div style="background-color: var(--error-light); border: 1px solid var(--error); padding: 1rem; border-radius: var(--radius-sm); text-align: center; margin-bottom: 1rem;">
+                        <span style="font-size: 1.5rem;">⚠️</span>
+                        <p style="color: #991b1b; font-size: 0.85rem; font-weight: 600; margin-top: 5px;">
+                            預約鎖定：您的信用積分為 {{ user_score }} 分（低於限額 80 分），系統已限制您的看房預約權限。
+                        </p>
+                    </div>
+                    <button class="btn-primary" disabled>❌ 積分過低，無法預約</button>
+                {% else %}
+                    <form method="post" action="{{ url_for('property.reserve', property_id=property.id) }}">
+                        <button type="submit" class="btn-primary">🗓️ 立即線上預約看房</button>
+                    </form>
+                {% endif %}
+            {% else %}
+                <a href="{{ url_for('auth.login') }}" class="btn-primary">🔑 登入以預約看房</a>
+            {% endif %}
+        </div>
+
+        <!-- Landlord Card -->
+        <div class="detail-main">
+            <h4 style="font-weight: 700; margin-bottom: 1rem; border-bottom: 1.5px solid var(--border); padding-bottom: 0.5rem;">
+                👤 房東聯絡資訊
+            </h4>
+            
+            <div style="display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.95rem;">
+                <div>房東姓名：<strong>{{ property.landlord_name }}</strong></div>
+                
+                <div>
+                    房東信用評價：
+                    {% if property.landlord_score >= 90 %}
+                        <span class="score-badge high">★ {{ property.landlord_score }} 分 (卓越)</span>
+                    {% elif property.landlord_score >= 80 %}
+                        <span class="score-badge warn">★ {{ property.landlord_score }} 分 (普通)</span>
+                    {% else %}
+                        <span class="score-badge danger">⚠ {{ property.landlord_score }} 分 (異常)</span>
+                    {% endif %}
+                </div>
+
+                {% if property.landlord_score < 80 %}
+                    <div style="background-color: #fffbeb; color: #b45309; padding: 0.6rem; border-radius: 4px; font-size: 0.8rem; border: 1.5px solid #fef3c7;">
+                        ⚠️ 警告：此房東之實名信用積分已低於 80 分，平台在此提示看房同學留意違約及看房環境安全。
+                    </div>
+                {% endif %}
+                
+                <div style="border-top: 1px dashed var(--border); padding-top: 0.75rem; margin-top: 0.5rem;">
+                    <div>📞 聯絡電話：{{ property.landlord_phone or '驗證通過後取得' }}</div>
+                    <div style="margin-top: 5px;">📧 電子信箱：{{ property.landlord_email or '驗證通過後取得' }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
