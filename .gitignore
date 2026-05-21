@@ -173,5 +173,8 @@ cython_debug/
 ehthumbs.db
 Thumbs.db
 
+database.db
+static/uploads/*
+!static/uploads/.gitkeep
 # User uploads
 app/static/uploads/
