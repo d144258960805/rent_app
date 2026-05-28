@@ -340,5 +340,9 @@ cython_debug/
 .Trashes
 ehthumbs.db
 Thumbs.db
-rent_app.db  
- 
+
+database.db
+static/uploads/*
+!static/uploads/.gitkeep
+# User uploads
+app/static/uploads/

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}逢甲租屋網 - 重生之我在逢甲找房子{% endblock %}</title>
+    <!-- Outfit & Noto Sans TC fonts -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+</head>
+<body>
+    <header>
+        <div class="nav-container">
+            <h1>
+                <a href="/">
+                    🏠 逢甲租屋網
+                </a>
+            </h1>
+            <nav>
+                <a href="/" class="{% if request.path == '/' %}active{% endif %}">首頁房源</a>
+                <a href="{{ url_for('roommate.list_posts') }}" class="{% if '/roommate' in request.path %}active{% endif %}">揪團找室友</a>
+                
+                {% if session.get('user_id') %}
+                    <div class="user-nav-info">
+                        👤 {{ session.get('user_name') }}
+                        {% if session.get('user_role') == 'landlord' %}
+                            <span class="score-badge high">房東</span>
+                        {% elif session.get('user_role') == 'admin' %}
+                            <span class="score-badge high" style="background-color:#c084fc; color:white;">管理者</span>
+                        {% else %}
+                            <span class="score-badge high" style="background-color:#60a5fa; color:white;">學生</span>
+                        {% endif %}
+                    </div>
+                    
+                    <a href="{{ url_for('auth.profile') }}" class="{% if request.path == '/auth/profile' %}active{% endif %}">個人控制台</a>
+                    
+                    {% if session.get('user_role') == 'landlord' %}
+                        <a href="{{ url_for('property.post') }}" style="background-color: var(--accent); color: #1e293b; font-weight: 700; border-radius: 4px;">刊登房源</a>
+                    {% endif %}
+                    {% if session.get('user_role') == 'admin' %}
+                        <a href="{{ url_for('auth.admin_review') }}" style="background-color: #a855f7; color: white;">後台審核</a>
+                    {% endif %}
+                    <a href="{{ url_for('auth.logout') }}" style="opacity: 0.8;">登出</a>
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}">登入</a>
+                    <a href="{{ url_for('auth.register') }}" style="background-color: white; color: var(--primary); font-weight: 700;">免費註冊</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-container">
+                    {% for category, message in messages %}
+                        <div class="flash {{ category }}">
+                            {% if category == 'success' %}
+                                 {{ message }}
+                            {% elif category == 'error' %}
+                                ❌ {{ message }}
+                            {% else %}
+                                ⚠️ {{ message }}
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}
+            {{ content|default('') }}
+        {% endblock %}
+    </div>
+</body>
+</html>

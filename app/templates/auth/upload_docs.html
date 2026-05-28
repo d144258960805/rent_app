@@ -1,0 +1,41 @@
+{% extends 'layout.html' %}
+
+{% block title %}上傳實名證明文件 - 逢甲租屋網{% endblock %}
+
+{% block content %}
+<div class="form-card" style="max-width: 600px;">
+    <h2 class="form-title">🛡️ 實名與房屋權狀審核</h2>
+    
+    <div style="background-color: var(--warning-light); border: 1.5px solid var(--warning); color: #92400e; padding: 1rem; border-radius: var(--radius-sm); font-size: 0.9rem; margin-bottom: 1.5rem; line-height: 1.5;">
+        🔒 <strong>AI 智慧地籍聯網防詐安全機制 (F-04)</strong><br>
+        為防範二房東與虛假房源詐騙，本平台導入了 **AI 自動化審核技術**。AI 將依據您填寫的所有權人與登記地址，**自動連網比對政府地產交易、地籍圖資與警政署公開資料庫**進行交叉驗證。請填寫正確資訊以利快速通關！
+    </div>
+
+    <form method="post" action="{{ url_for('auth.upload_docs') }}" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="id_card">1. 上傳個人身分證 (正面影本) *</label>
+            <input type="file" id="id_card" name="id_card" accept="image/*" class="form-input" style="padding: 0.5rem;" required>
+        </div>
+        
+        <div class="form-group" style="margin-top: 1.25rem;">
+            <label for="title_deed">2. 上傳房屋權狀 (所有權影本/照片) *</label>
+            <input type="file" id="title_deed" name="title_deed" accept="image/*" class="form-input" style="padding: 0.5rem;" required>
+        </div>
+
+        <div class="form-group" style="margin-top: 1.25rem;">
+            <label for="owner_name">3. 權狀登記所有權人姓名 *</label>
+            <input type="text" id="owner_name" name="owner_name" placeholder="必須與您的身分證/註冊姓名完全吻合" class="form-input" style="padding: 0.5rem;" required>
+        </div>
+
+        <div class="form-group" style="margin-top: 1.25rem;">
+            <label for="property_address">4. 權狀登記房屋完整地址 *</label>
+            <input type="text" id="property_address" name="property_address" placeholder="例如：台中市西屯區福星路100號 (必須位於逢甲周邊)" class="form-input" style="padding: 0.5rem;" required>
+            <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-top: 4px;">💡 AI 將自動進行網際網路 GIS 地標核對與地政註冊真實性檢索。</span>
+        </div>
+        
+        <button type="submit" class="btn-primary" style="margin-top: 1.5rem; background-color: var(--accent); color: #1e293b; font-weight: 700;">
+            🚀 提交並啟動 AI 聯網審核
+        </button>
+    </form>
+</div>
+{% endblock %}

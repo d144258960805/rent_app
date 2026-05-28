@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ room.title }} - 逢甲租屋網</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <header class="navbar navbar-detail">
+        <a href="/" class="nav-back-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            返回房源列表
+        </a>
+        <div class="logo">逢甲租屋網</div>
+    </header>
+
+    <main class="container">
+        <!-- Room Header -->
+        <div class="room-header">
+            <h1>{{ room.title }}</h1>
+            <div class="room-meta">
+                <span>📍 {{ room.address }} • {{ room.type }} • {{ room.size }} 坪</span>
+                <div class="room-tags">
+                    {% for tag in room.tags_list %}
+                    <span class="tag-pill"># {{ tag }}</span>
+                    {% endfor %}
+                    {% if room.has_subsidy == 1 %}
+                    <span class="tag-pill tag-pill orange"># 可申請租補</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Room Gallery Grid -->
+        <div class="room-gallery">
+            <div class="gallery-main" id="galleryMainImg">
+                <img src="{{ room.image_url }}" alt="{{ room.title }}">
+            </div>
+            <div class="gallery-side">
+                <div class="gallery-item">🏠 {{ room.type }}</div>
+                <div class="gallery-item">📱 聯絡房東：{{ room.owner_name }}</div>
+            </div>
+        </div>
+
+        <!-- Room Details & Price Card Grid -->
+        <div class="room-details-grid">
+            <div class="room-desc-card">
+                <h3>房源特色與詳細介紹</h3>
+                <p class="room-description-text">{{ room.description }}</p>
+            </div>
+            
+            <div class="room-info-card">
+                <div class="price-box">
+                    <span class="price-amount">NT$ {{ "{:,}".format(room.price) }}</span>
+                    <span class="price-unit">/ 月</span>
+                </div>
+                <div class="info-list">
+                    <div class="info-item">
+                        <span class="info-label">格局大小</span>
+                        <span class="info-value">{{ room.size }} 坪</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">房屋類型</span>
+                        <span class="info-value">{{ room.type }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">租屋補助</span>
+                        <span class="info-value">{% if room.has_subsidy == 1 %}✅ 可申請{% else %}❌ 不可申請{% endif %}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">聯絡房東</span>
+                        <span class="info-value">{{ room.owner_name }} ({{ room.owner_phone }})</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reviews Section -->
+        <div class="reviews-section">
+            <div class="reviews-header">
+                <h2>租客真實評論</h2>
+                <!-- Write Review Button -->
+                <button id="openReviewModalBtn" class="btn-primary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                    撰寫評論
+                </button>
+            </div>
+            
+            <div class="reviews-list">
+                <p class="empty-state">目前還沒有評論，成為第一個留下真實評價的租客吧！</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Review Upload Modal -->
+    <div id="reviewModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>匿名上傳真實評價</h3>
+                <button id="closeModalBtn" class="close-btn">&times;</button>
+            </div>
+            <form id="reviewForm">
+                <!-- Hidden inputs -->
+                <input type="hidden" id="currentRoomId" name="room_id" value="{{ room.id }}">
+                
+                <div class="form-group">
+                    <label for="reviewContent">你的評論 (必填)</label>
+                    <textarea id="reviewContent" name="content" rows="4" placeholder="例如：隔音很好，房東人很親切..." required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="reviewImage">上傳實際照片 (選填，限 5MB 以內)</label>
+                    <div class="file-upload-wrapper">
+                        <input type="file" id="reviewImage" name="image" accept="image/png, image/jpeg, image/jpg, image/gif">
+                        <div class="file-upload-trigger">
+                            <span id="fileNameDisplay">選擇照片</span>
+                        </div>
+                    </div>
+                    <div id="imagePreviewContainer" class="image-preview-container" style="display: none;">
+                        <img id="imagePreview" src="" alt="預覽圖片">
+                        <button type="button" id="removeImageBtn" class="remove-image-btn">移除</button>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" id="cancelBtn" class="btn-secondary">取消</button>
+                    <button type="submit" id="submitBtn" class="btn-primary">匿名送出</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Success Toast Notification -->
+    <div id="toast" class="toast">上傳成功！感謝您的真實回饋。</div>
+
+    <!-- Lightbox Image Zoom -->
+    <div id="lightboxModal" class="lightbox-overlay">
+        <div class="lightbox-content">
+            <button id="closeLightboxBtn" class="lightbox-close">&times;</button>
+            <img id="lightboxImage" class="lightbox-img" src="" alt="放大預覽圖片">
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/review.js') }}"></script>
+</body>
+</html>
