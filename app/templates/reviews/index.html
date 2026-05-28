@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>學生評論區</h2>
+    <a href="{{ url_for('review_bp.create') }}" class="btn btn-primary shadow-sm">撰寫評論</a>
+</div>
+<div class="row row-cols-1 g-3">
+    {% for review in reviews %}
+    <div class="col">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <span class="badge bg-primary me-2">房源 #{{ review.property_id }}</span>
+                        <small class="text-muted">學生 #{{ review.student_id }} 發佈於 {{ review.created_at }}</small>
+                    </div>
+                    <a href="{{ url_for('review_bp.view', review_id=review.id) }}" class="btn btn-sm btn-outline-secondary rounded-pill">查看</a>
+                </div>
+                <p class="card-text text-truncate">{{ review.content }}</p>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12 text-center py-5">
+        <p class="text-muted fs-5">目前還沒有任何評論，快來搶頭香吧！</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

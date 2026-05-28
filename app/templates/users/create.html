@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card shadow-sm border-0 mx-auto" style="max-width: 600px;">
+    <div class="card-header bg-white py-3">
+        <h4 class="mb-0">新增使用者</h4>
+    </div>
+    <div class="card-body p-4">
+        <form action="{{ url_for('user_bp.create') }}" method="POST">
+            <div class="mb-3">
+                <label class="form-label text-muted">信箱 *</label>
+                <input type="email" name="email" class="form-control bg-light" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-muted">密碼 *</label>
+                <input type="password" name="password" class="form-control bg-light" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-muted">姓名 *</label>
+                <input type="text" name="name" class="form-control bg-light" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-muted">角色 *</label>
+                <select name="role" class="form-select bg-light" required>
+                    <option value="student">學生</option>
+                    <option value="landlord">房東</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-muted">電話</label>
+                <input type="text" name="phone" class="form-control bg-light">
+            </div>
+            <button type="submit" class="btn btn-primary w-100 py-2">建立使用者</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
