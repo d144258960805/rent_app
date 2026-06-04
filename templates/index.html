@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>逢甲租屋網 - 專屬學生的優質租屋平台</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <!-- Glassmorphism Navbar -->
+    <header class="navbar">
+        <div class="logo">逢甲租屋網</div>
+        <button id="openRoomModalBtn" class="btn-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            刊登房源
+        </button>
+    </header>
+
+    <!-- Hero Search Section -->
+    <section class="hero-section">
+        <div class="hero-content">
+            <h1>尋找你在逢甲的理想小窩</h1>
+            <p>資訊透明、防範詐騙、專為逢甲師生設計的無仲介費租屋平台</p>
+            
+            <div class="search-box-wrapper">
+                <input type="text" id="searchInput" placeholder="輸入關鍵字、街道，或輸入 #標籤 搜尋（例如：#採光極佳）...">
+                <button id="searchBtn" class="btn-primary">搜尋房源</button>
+            </div>
+            
+            <div class="quick-tags">
+                <span>熱門搜尋：</span>
+                <span class="quick-tag-pill" data-tag="採光極佳">#採光極佳</span>
+                <span class="quick-tag-pill" data-tag="近逢甲大學">#近逢甲大學</span>
+                <span class="quick-tag-pill" data-tag="免仲介費">#免仲介費</span>
+                <span class="quick-tag-pill" data-tag="可申請租補">#可申請租補</span>
+                <span class="quick-tag-pill" data-tag="北歐風">#北歐風</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Container -->
+    <main class="container index-container">
+        <!-- Sidebar Filters -->
+        <aside class="filters-sidebar">
+            <div class="sidebar-card">
+                <h3>條件篩選</h3>
+                
+                <div class="filter-group">
+                    <label for="filterType">房屋類型</label>
+                    <select id="filterType">
+                        <option value="全部">全部房型</option>
+                        <option value="獨立套房">獨立套房</option>
+                        <option value="雅房">雅房</option>
+                        <option value="整層住家">整層住家</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="filterPrice">最高預算 (月租金)</label>
+                    <div class="price-input-wrapper">
+                        <input type="range" id="filterPriceRange" min="3000" max="25000" step="500" value="25000">
+                        <div class="price-labels">
+                            <span>$3,000</span>
+                            <span id="priceVal" class="price-val">不限</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="filter-group checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="filterSubsidy">
+                        <span>可申請租屋補貼</span>
+                    </label>
+                </div>
+                
+                <button id="resetFiltersBtn" class="btn-secondary btn-full">重設篩選條件</button>
+            </div>
+        </aside>
+
+        <!-- Room Grid Section -->
+        <section class="rooms-section-wrapper">
+            <div class="rooms-grid-header">
+                <h2>探索所有優質房源</h2>
+                <span id="roomCount" class="room-count">正在載入房源...</span>
+            </div>
+            
+            <div id="roomsGrid" class="rooms-grid">
+                <!-- Skeletons display here dynamically before loading -->
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Room Upload Modal -->
+    <div id="roomModal" class="modal-overlay">
+        <div class="modal-content modal-content-wide">
+            <div class="modal-header">
+                <h3>刊登逢甲優質房源</h3>
+                <button id="closeRoomModalBtn" class="close-btn">&times;</button>
+            </div>
+            <form id="roomForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="roomTitle">房源名稱 (必填)</label>
+                        <input type="text" id="roomTitle" name="title" placeholder="例如：逢甲大學旁-質感陽台獨立套房" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="roomAddress">房源地址 (必填)</label>
+                        <input type="text" id="roomAddress" name="address" placeholder="例如：台中市西屯區逢甲路 123 號" required>
+                    </div>
+                    <div class="form-row-three">
+                        <div class="form-group">
+                            <label for="roomType">房屋類型 (必填)</label>
+                            <select id="roomType" name="type" required>
+                                <option value="" disabled selected>選擇房型</option>
+                                <option value="獨立套房">獨立套房</option>
+                                <option value="雅房">雅房</option>
+                                <option value="整層住家">整層住家</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="roomPrice">月租金 (元/必填)</label>
+                            <input type="number" id="roomPrice" name="price" min="1" placeholder="例如：7500" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="roomSize">坪數 (坪/必填)</label>
+                            <input type="number" id="roomSize" name="size" step="0.1" min="0.1" placeholder="例如：7.5" required>
+                        </div>
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="roomSubsidy" name="has_subsidy" value="1">
+                            <span>可申請租屋補貼</span>
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label for="roomTags">特色標籤 (選填，多個標籤請用逗號分隔)</label>
+                        <input type="text" id="roomTags" name="tags" placeholder="例如：免仲介費, 採光極佳, 附獨立洗衣機">
+                    </div>
+                    <div class="form-group">
+                        <label for="roomDescription">房源詳細描述 (選填)</label>
+                        <textarea id="roomDescription" name="description" rows="3" placeholder="請描述房源特色、周邊機能、水電費計算方式等..."></textarea>
+                    </div>
+                    <div class="form-row-two">
+                        <div class="form-group">
+                            <label for="ownerName">房東姓名 (必填)</label>
+                            <input type="text" id="ownerName" name="owner_name" placeholder="例如：陳房東" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="ownerPhone">聯絡電話 (必填)</label>
+                            <input type="text" id="ownerPhone" name="owner_phone" placeholder="例如：0912-345678" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="roomImage">上傳房源照片 (選填，限 5MB 以內)</label>
+                        <div class="file-upload-wrapper">
+                            <input type="file" id="roomImage" name="image" accept="image/png, image/jpeg, image/jpg, image/gif">
+                            <div class="file-upload-trigger">
+                                <span id="roomFileNameDisplay">選擇照片</span>
+                            </div>
+                        </div>
+                        <div id="roomImagePreviewContainer" class="image-preview-container" style="display: none;">
+                            <img id="roomImagePreview" src="" alt="房源預覽圖片">
+                            <button type="button" id="removeRoomImageBtn" class="remove-image-btn">移除</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" id="cancelRoomBtn" class="btn-secondary">取消</button>
+                    <button type="submit" id="submitRoomBtn" class="btn-primary">發布房源</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Success Toast Notification -->
+    <div id="toast" class="toast">房源刊登成功！</div>
+
+    <footer class="index-footer">
+        <p>© 2026 逢甲租屋網. All rights reserved. 專題期末成果發表.</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/index.js') }}"></script>
+</body>
+</html>

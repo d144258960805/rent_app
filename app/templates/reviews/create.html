@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card shadow-sm border-0 mx-auto" style="max-width: 600px;">
+    <div class="card-header bg-white py-3"><h4 class="mb-0">撰寫房源評論</h4></div>
+    <div class="card-body p-4">
+        <form action="{{ url_for('review_bp.create') }}" method="POST">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label text-muted">房源 ID *</label>
+                    <input type="number" name="property_id" class="form-control bg-light" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">您的學生 ID *</label>
+                    <input type="number" name="student_id" class="form-control bg-light" required>
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="form-label text-muted">評論內容 (匿名分享你的看房/租屋經驗) *</label>
+                <textarea name="content" class="form-control bg-light" rows="5" placeholder="採光好嗎？隔音如何？房東人好嗎？" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 py-2">發佈評論</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

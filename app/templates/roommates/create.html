@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card shadow-sm border-0 mx-auto" style="max-width: 600px;">
+    <div class="card-header bg-white py-3"><h4 class="mb-0">發佈找室友貼文</h4></div>
+    <div class="card-body p-4">
+        <form action="{{ url_for('roommate_bp.create') }}" method="POST">
+            <div class="mb-3">
+                <label class="form-label text-muted">您的學生 ID *</label>
+                <input type="number" name="student_id" class="form-control bg-light" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-muted">貼文標題 *</label>
+                <input type="text" name="title" class="form-control bg-light" placeholder="例如: 尋找合租大雅路整層住家室友" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-muted">詳細內容 (預算、生活習慣等) *</label>
+                <textarea name="content" class="form-control bg-light" rows="5" required></textarea>
+            </div>
+            <div class="mb-4">
+                <label class="form-label text-muted">性別限制</label>
+                <select name="required_gender" class="form-select bg-light">
+                    <option value="不限">不限</option>
+                    <option value="限男">限男</option>
+                    <option value="限女">限女</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 py-2">發佈貼文</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

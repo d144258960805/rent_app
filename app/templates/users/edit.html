@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card shadow-sm border-0 mx-auto" style="max-width: 600px;">
+    <div class="card-header bg-white py-3">
+        <h4 class="mb-0">編輯使用者 (#{{ user.id }})</h4>
+    </div>
+    <div class="card-body p-4">
+        <form action="{{ url_for('user_bp.edit', user_id=user.id) }}" method="POST">
+            <div class="mb-3">
+                <label class="form-label text-muted">信箱 *</label>
+                <input type="email" name="email" class="form-control bg-light" value="{{ user.email }}" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-muted">姓名 *</label>
+                <input type="text" name="name" class="form-control bg-light" value="{{ user.name }}" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-muted">角色 *</label>
+                <select name="role" class="form-select bg-light" required>
+                    <option value="student" {% if user.role == 'student' %}selected{% endif %}>學生</option>
+                    <option value="landlord" {% if user.role == 'landlord' %}selected{% endif %}>房東</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-muted">電話</label>
+                <input type="text" name="phone" class="form-control bg-light" value="{{ user.phone }}">
+            </div>
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{{ url_for('user_bp.index') }}" class="btn btn-outline-secondary px-4">返回</a>
+                <button type="submit" class="btn btn-warning px-4 text-white">儲存變更</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

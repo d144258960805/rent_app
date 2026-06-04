@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card shadow-sm border-0 mx-auto" style="max-width: 700px;">
+    <div class="card-body p-5">
+        <div class="d-flex align-items-center mb-4">
+            <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center me-3" style="width: 50px; height: 50px;">
+                <span class="fs-5">#{{ review.student_id }}</span>
+            </div>
+            <div>
+                <h5 class="mb-0">匿名學生</h5>
+                <small class="text-muted">發佈於 {{ review.created_at }}</small>
+            </div>
+            <span class="badge bg-info ms-auto">房源 ID: {{ review.property_id }}</span>
+        </div>
+        
+        <div class="bg-light p-4 rounded-3 mb-4">
+            <p class="mb-0 lh-lg" style="white-space: pre-line;">{{ review.content }}</p>
+        </div>
+        
+        <hr class="my-4">
+        
+        <div class="d-flex justify-content-between">
+            <a href="{{ url_for('review_bp.index') }}" class="btn btn-outline-secondary">返回列表</a>
+            <div>
+                <a href="{{ url_for('review_bp.edit', review_id=review.id) }}" class="btn btn-outline-warning me-2">修改</a>
+                <form action="{{ url_for('review_bp.delete', review_id=review.id) }}" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-outline-danger" onclick="return confirm('確定要刪除這則評論嗎？')">刪除</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
