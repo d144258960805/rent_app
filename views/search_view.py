@@ -1,214 +1,133 @@
 import customtkinter as ctk
 from controllers.search_controller import SearchController
+from components.property_card import PropertyCard
 
-class SearchView(ctk.CTkFrame):
-    def __init__(self, master, **kwargs):
-        super().__init__(master, **kwargs)
+class SearchFrame(ctk.CTkFrame):
+    def __init__(self, parent, controller):
+        super().__init__(parent)
+        self.controller = controller
+        self.active_tags = set()  # 用於記錄當前被選取的標籤
+        self.tag_buttons = {}      # 用於記錄標籤按鈕對象以切換樣式
+
+        # 標題欄
+        header_frame = ctk.CTkFrame(self, fg_color="transparent")
+        header_frame.pack(fill="x", padx=20, pady=(15, 10))
         
-        # 初始化 Controller
-        self.controller = SearchController(self)
+        back_btn = ctk.CTkButton(header_frame, text="← 返回首頁", width=100, command=self.go_home)
+        back_btn.pack(side="left")
         
-        # 目前已選擇的標籤
-        self.selected_tags = set()
+        title_label = ctk.CTkLabel(header_frame, text="🏷️ 關鍵字與熱門標籤搜尋", font=ctk.CTkFont(size=22, weight="bold"))
+        title_label.pack(side="left", padx=20)
+
+        # 搜尋輸入框與按鈕列
+        search_bar = ctk.CTkFrame(self, fg_color="transparent")
+        search_bar.pack(fill="x", padx=20, pady=(0, 10))
         
-        self._setup_ui()
+        self.search_entry = ctk.CTkEntry(
+            search_bar, 
+            placeholder_text="請輸入關鍵字 (如：捷境、文華路、採光、陽台...)", 
+            height=35
+        )
+        self.search_entry.pack(side="left", fill="x", expand=True, padx=(0, 10))
         
-        # 初始載入所有房源
-        self.controller.perform_search(keyword="", tags=[])
+        # 綁定 Enter 鍵觸發搜尋
+        self.search_entry.bind("<Return>", lambda event: self.perform_search())
         
-    def _setup_ui(self):
-        self.grid_rowconfigure(2, weight=1)
-        self.grid_columnconfigure(0, weight=1)
-        
-        # 標題區塊
-        title_label = ctk.CTkLabel(self, text="逢甲學生專屬 - #標籤痛點篩選網", font=("Arial", 24, "bold"), text_color="#1E3A8A")
-        title_label.grid(row=0, column=0, pady=(20, 5), sticky="n")
-        
-        subtitle_label = ctk.CTkLabel(self, text="💡 專為逢甲同學打造的精準篩選！點選下方熱門標籤，直接避開租屋痛點", font=("Arial", 12), text_color="#4B5563")
-        subtitle_label.grid(row=0, column=0, pady=(50, 5), sticky="n")
-        
-        # 搜尋與標籤區塊
-        search_frame = ctk.CTkFrame(self, fg_color="transparent")
-        search_frame.grid(row=1, column=0, padx=20, pady=5, sticky="ew")
-        
-        # 關鍵字輸入框與搜尋按鈕
-        input_frame = ctk.CTkFrame(search_frame, fg_color="transparent")
-        input_frame.pack(fill="x", pady=5)
-        
-        self.keyword_entry = ctk.CTkEntry(input_frame, placeholder_text="輸入房源名稱、地址或房型 (例如：西屯區、獨立套房)...", width=500, font=("Arial", 14))
-        self.keyword_entry.pack(side="left", padx=(0, 10))
-        
-        search_btn = ctk.CTkButton(input_frame, text="搜尋", width=90, height=32, font=("Arial", 13, "bold"), fg_color="#2563EB", hover_color="#1D4ED8", command=self.trigger_search)
+        search_btn = ctk.CTkButton(
+            search_bar, 
+            text="開始搜尋", 
+            width=100, 
+            height=35,
+            command=self.perform_search
+        )
         search_btn.pack(side="left")
+
+        # 熱門標籤列 (點擊可多選疊加)
+        tags_container = ctk.CTkFrame(self)
+        tags_container.pack(fill="x", padx=20, pady=(0, 15))
         
-        # 標籤分類區塊 (4大痛點分類，採用 2x2 格狀版面)
-        self.categories_container = ctk.CTkFrame(search_frame, fg_color="#F3F4F6", corner_radius=12)
-        self.categories_container.pack(fill="x", pady=10, ipady=5)
+        tags_lbl = ctk.CTkLabel(tags_container, text="熱門標籤 (可複選)：", font=ctk.CTkFont(size=12, weight="bold"))
+        tags_lbl.pack(side="left", padx=(15, 10), pady=10)
         
-        self.categories_data = [
-            {
-                "title": "空間與採光",
-                "desc": "💡 隱私、安全與曬衣便利",
-                "tags": ["獨立陽台", "非頂加", "有外窗", "落地窗", "採光好"]
-            },
-            {
-                "title": "衛浴與生活",
-                "desc": "💡 不追垃圾車、不共用洗衣機",
-                "tags": ["獨立洗衣機", "垃圾代收", "電梯大樓", "乾濕分離", "養寵物", "子母車"]
-            },
-            {
-                "title": "費用與合約",
-                "desc": "💡 租金補貼與台水電大省錢！",
-                "tags": ["台水台電", "免仲介費", "可申請租補"]
-            },
-            {
-                "title": "周邊與交通",
-                "desc": "💡 攸關通勤上學與遲到機率",
-                "tags": ["近捷運", "離校區5分內", "有小客車/機車位"]
-            }
-        ]
+        # 使用流式排版加載標籤按鈕
+        tags_list_frame = ctk.CTkFrame(tags_container, fg_color="transparent")
+        tags_list_frame.pack(side="left", fill="both", expand=True, pady=5)
         
-        self.tag_buttons = {}
-        self._build_categorized_tags()
+        for tag in SearchController.get_popular_tags():
+            btn = ctk.CTkButton(
+                tags_list_frame,
+                text=f"#{tag}",
+                font=ctk.CTkFont(size=11),
+                width=65,
+                height=22,
+                fg_color=("#E5E5EA", "#2C2C2E"),
+                text_color=("black", "white"),
+                hover_color=("#D1D1D6", "#3A3A3C"),
+                command=lambda t=tag: self.toggle_tag(t)
+            )
+            btn.pack(side="left", padx=5, pady=2)
+            self.tag_buttons[tag] = btn
+
+        # 結果數量顯示與結果清單
+        self.results_count_label = ctk.CTkLabel(self, text="共找到 0 筆符合的房源", font=ctk.CTkFont(size=13), anchor="w")
+        self.results_count_label.pack(fill="x", padx=20, pady=(0, 5))
         
-        # 已選標籤顯示區
-        self.selected_tags_label = ctk.CTkLabel(search_frame, text="已選標籤：無", font=("Arial", 14, "bold"), text_color="#10B981")
-        self.selected_tags_label.pack(anchor="w", pady=(5, 5))
-        
-        # 搜尋結果清單區塊 (可滾動)
-        self.results_frame = ctk.CTkScrollableFrame(self, fg_color="#F9FAFB")
-        self.results_frame.grid(row=2, column=0, padx=20, pady=10, sticky="nsew")
-        self.results_frame.grid_columnconfigure(0, weight=1)
-        
-    def _build_categorized_tags(self):
-        """建立分類標籤的 GUI 元件"""
-        # 使用 Grid 佈局將 4 個分類排列為 2x2 格狀，使排版更緊湊美觀
-        for idx, cat in enumerate(self.categories_data):
-            row = idx // 2
-            col = idx % 2
-            
-            # 分類卡片框
-            cat_card = ctk.CTkFrame(self.categories_container, fg_color="#FFFFFF", corner_radius=8, border_width=1, border_color="#E5E7EB")
-            cat_card.grid(row=row, column=col, padx=8, pady=6, sticky="nsew")
-            self.categories_container.grid_columnconfigure(col, weight=1)
-            self.categories_container.grid_rowconfigure(row, weight=1)
-            
-            # 分類標題與痛點說明
-            title_frame = ctk.CTkFrame(cat_card, fg_color="transparent")
-            title_frame.pack(fill="x", padx=10, pady=(8, 4))
-            
-            title_lbl = ctk.CTkLabel(title_frame, text=cat["title"], font=("Arial", 13, "bold"), text_color="#1F2937")
-            title_lbl.pack(side="left")
-            
-            desc_lbl = ctk.CTkLabel(title_frame, text=cat["desc"], font=("Arial", 11), text_color="#4B5563")
-            desc_lbl.pack(side="right", padx=(10, 0))
-            
-            # 標籤按鈕流 (放置按鈕)
-            buttons_frame = ctk.CTkFrame(cat_card, fg_color="transparent")
-            buttons_frame.pack(fill="x", padx=10, pady=(2, 8))
-            
-            # 依序擺放標籤按鈕
-            for tag in cat["tags"]:
-                btn = ctk.CTkButton(
-                    buttons_frame, 
-                    text=f"#{tag}",
-                    width=65,
-                    height=24,
-                    font=("Arial", 11),
-                    command=lambda t=tag: self.toggle_tag(t),
-                    fg_color="#E5E7EB",
-                    text_color="#374151",
-                    hover_color="#D1D5DB"
-                )
-                btn.pack(side="left", padx=3, pady=2)
-                self.tag_buttons[tag] = btn
-                
+        self.scroll_results = ctk.CTkScrollableFrame(self)
+        self.scroll_results.pack(fill="both", expand=True, padx=20, pady=(0, 20))
+
+    def tkraise(self, *args, **kwargs):
+        super().tkraise(*args, **kwargs)
+        self.perform_search() # 每次進入頁面自動刷新
+
+    def go_home(self):
+        self.controller.show_frame("HomeFrame")
+
     def toggle_tag(self, tag):
-        """點擊標籤時切換選取狀態，並更新 UI、觸發搜尋"""
-        if tag in self.selected_tags:
-            self.selected_tags.remove(tag)
-            # 還原為未選取樣式
-            self.tag_buttons[tag].configure(
-                fg_color="#E5E7EB", 
-                text_color="#374151",
-                hover_color="#D1D5DB"
+        """切換標籤選取狀態並改變外觀樣式，且即時刷新搜尋結果"""
+        btn = self.tag_buttons[tag]
+        if tag in self.active_tags:
+            self.active_tags.remove(tag)
+            # 還原為未選取狀態的灰色
+            btn.configure(
+                fg_color=("#E5E5EA", "#2C2C2E"),
+                text_color=("black", "white"),
+                hover_color=("#D1D1D6", "#3A3A3C")
             )
         else:
-            self.selected_tags.add(tag)
-            # 設定為已選取樣式 (翡翠綠高亮)
-            self.tag_buttons[tag].configure(
-                fg_color="#10B981", 
-                text_color="#FFFFFF",
-                hover_color="#059669"
+            self.active_tags.add(tag)
+            # 設定為選取狀態的品牌藍色
+            btn.configure(
+                fg_color=("#007AFF", "#0A84FF"),
+                text_color="white",
+                hover_color=("#0056B3", "#0062D6")
             )
-            
-        # 更新已選標籤 UI
-        if self.selected_tags:
-            selected_text = " ".join([f"#{t}" for t in self.selected_tags])
-            self.selected_tags_label.configure(text=f"已選標籤：{selected_text}")
-        else:
-            self.selected_tags_label.configure(text="已選標籤：無")
-            
-        # 觸發 Controller 進行搜尋
-        self.trigger_search()
+        # 即時執行搜尋
+        self.perform_search()
+
+    def perform_search(self):
+        """執行關鍵字與標籤的疊加搜尋並渲染畫面"""
+        keyword = self.search_entry.get().strip()
         
-    def trigger_search(self):
-        """讀取關鍵字與已選標籤，並觸發搜尋"""
-        keyword = self.keyword_entry.get().strip()
-        self.controller.perform_search(keyword=keyword, tags=list(self.selected_tags))
+        # 呼叫 Controller 執行 SQLite LIKE 與標籤比對
+        properties = SearchController.search_properties(keyword, list(self.active_tags))
         
-    def update_search_results(self, results):
-        """Controller 會呼叫這個方法來更新搜尋結果畫面"""
-        # 清除舊結果
-        for widget in self.results_frame.winfo_children():
+        # 更新符合筆數
+        self.results_count_label.configure(text=f"共找到 {len(properties)} 筆符合的房源")
+        
+        # 清除舊列表
+        for widget in self.scroll_results.winfo_children():
             widget.destroy()
             
-        if not results:
-            no_result = ctk.CTkLabel(self.results_frame, text="找不到符合這些標籤組合的房源 😢 請嘗試減少選取的標籤！", font=("Arial", 15), text_color="#9CA3AF")
-            no_result.pack(pady=40)
-            return
-            
-        # 顯示新結果卡片
-        for i, prop in enumerate(results):
-            card = ctk.CTkFrame(self.results_frame, fg_color="#FFFFFF", corner_radius=12, border_width=1, border_color="#E5E7EB")
-            card.grid(row=i, column=0, padx=15, pady=10, sticky="ew")
-            self.results_frame.grid_columnconfigure(0, weight=1)
-            card.grid_columnconfigure(1, weight=1)
-            
-            # 左側：房源基本資訊
-            left_info_frame = ctk.CTkFrame(card, fg_color="transparent")
-            left_info_frame.grid(row=0, column=0, padx=15, pady=15, sticky="w")
-            
-            # 房源標題
-            title = ctk.CTkLabel(left_info_frame, text=prop['title'], font=("Arial", 16, "bold"), text_color="#1E3A8A")
-            title.pack(anchor="w")
-            
-            # 房源資訊 (租金特別高亮)
-            info_text = f"{prop['room_type']}  |  地址: {prop['address']}"
-            info = ctk.CTkLabel(left_info_frame, text=info_text, font=("Arial", 13), text_color="#4B5563")
-            info.pack(anchor="w", pady=(4, 0))
-            
-            price_label = ctk.CTkLabel(left_info_frame, text=f"租金: NT$ {prop['price']} / 月", font=("Arial", 14, "bold"), text_color="#DC2626")
-            price_label.pack(anchor="w", pady=(2, 0))
-            
-            # 右側：房源擁有的標籤 (以精美 Badge 效果橫向排列)
-            right_tags_frame = ctk.CTkFrame(card, fg_color="transparent")
-            right_tags_frame.grid(row=0, column=1, padx=15, pady=15, sticky="e")
-            
-            if 'tags' in prop and prop['tags']:
-                # 為了避免標籤太多擠在一起，使用一個 Flow-like 的橫向排列
-                for t_idx, t in enumerate(prop['tags']):
-                    # 若為目前選取中的標籤，則使用亮綠色徽章，其餘使用淡藍色
-                    is_active = t in self.selected_tags
-                    bg_color = "#D1FAE5" if is_active else "#EFF6FF"
-                    txt_color = "#065F46" if is_active else "#1E40AF"
-                    
-                    t_badge = ctk.CTkLabel(
-                        right_tags_frame, 
-                        text=f" #{t} ", 
-                        font=("Arial", 11, "bold" if is_active else "normal"),
-                        fg_color=bg_color,
-                        text_color=txt_color,
-                        corner_radius=6
-                    )
-                    t_badge.pack(side="left", padx=3)
+        # 渲染搜尋結果
+        if not properties:
+            no_results_lbl = ctk.CTkLabel(
+                self.scroll_results, 
+                text="🏷️ 找不到包含對應標籤或關鍵字的房源！", 
+                font=ctk.CTkFont(size=14, slant="italic"),
+                text_color="gray"
+            )
+            no_results_lbl.pack(pady=40)
+        else:
+            for prop in properties:
+                card = PropertyCard(self.scroll_results, prop, self.controller)
+                card.pack(fill="x", padx=10, pady=8)
