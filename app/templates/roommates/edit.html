@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card shadow-sm border-0 mx-auto" style="max-width: 600px;">
+    <div class="card-header bg-white py-3"><h4 class="mb-0">編輯找室友貼文</h4></div>
+    <div class="card-body p-4">
+        <form action="{{ url_for('roommate_bp.edit', post_id=post.id) }}" method="POST">
+            <div class="mb-3">
+                <label class="form-label text-muted">貼文標題 *</label>
+                <input type="text" name="title" class="form-control bg-light" value="{{ post.title }}" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-muted">詳細內容 *</label>
+                <textarea name="content" class="form-control bg-light" rows="5" required>{{ post.content }}</textarea>
+            </div>
+            <div class="mb-4">
+                <label class="form-label text-muted">性別限制</label>
+                <select name="required_gender" class="form-select bg-light">
+                    <option value="不限" {% if post.required_gender == '不限' %}selected{% endif %}>不限</option>
+                    <option value="限男" {% if post.required_gender == '限男' %}selected{% endif %}>限男</option>
+                    <option value="限女" {% if post.required_gender == '限女' %}selected{% endif %}>限女</option>
+                </select>
+            </div>
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('roommate_bp.view', post_id=post.id) }}" class="btn btn-outline-secondary">取消</a>
+                <button type="submit" class="btn btn-warning text-white px-4">儲存變更</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

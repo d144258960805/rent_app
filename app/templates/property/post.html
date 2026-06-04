@@ -1,0 +1,94 @@
+{% extends 'layout.html' %}
+
+{% block title %}刊登租屋房源 - 逢甲租屋網{% endblock %}
+
+{% block content %}
+<div class="form-card" style="max-width: 700px;">
+    <h2 class="form-title">🏠 刊登租屋房源</h2>
+
+    <!-- Check Credit Score Restrictions (F-07) -->
+    {% if score < 80 %}
+        <div style="background-color: var(--error-light); border: 2px solid var(--error); padding: 1.5rem; border-radius: var(--radius-sm); text-align: center; margin-bottom: 2rem;">
+            <span style="font-size: 2.5rem;">⚠️</span>
+            <h4 style="color: #991b1b; font-weight: 700; margin-top: 10px; font-size: 1.1rem;">房源發布功能已遭凍結</h4>
+            <p style="color: #991b1b; font-size: 0.9rem; margin-top: 5px;">
+                因您的實名信用積分當前為 <strong>{{ score }} 分</strong>（低於平台規定的 80 分門檻），系統已暫時限制您的房源上架與更新權限。請遵守守信行為以恢復分數。
+            </p>
+            <a href="{{ url_for('auth.profile') }}" class="btn-primary" style="margin-top: 15px; font-size: 0.85rem; padding: 0.5rem; width: auto; display: inline-flex;">返回個人控制台</a>
+        </div>
+    {% endif %}
+
+    <form method="post" action="{{ url_for('property.post') }}" enctype="multipart/form-data">
+        <fieldset {% if score < 80 %}disabled style="opacity: 0.6; border: none; padding: 0;"{% else %}style="border: none; padding: 0;"{% endif %}>
+            
+            <div class="form-group">
+                <label for="title">房源標題 *</label>
+                <input type="text" id="title" name="title" class="form-input" placeholder="例如：逢甲文華路獨立陽台雙人套房，採光極佳" required>
+            </div>
+
+            <div class="form-group">
+                <label for="description">房屋詳細描述</label>
+                <textarea id="description" name="description" class="form-textarea" placeholder="例如：家具家電全配、包含高速網路及水費、垃圾有管理室代收、歡迎預約看房..." rows="4"></textarea>
+            </div>
+
+            <div class="filters-grid" style="margin-bottom: 1.25rem;">
+                <div class="form-group">
+                    <label for="rent">每月租金 (NTD) *</label>
+                    <input type="number" id="rent" name="rent" class="form-input" placeholder="如：6500" required min="1">
+                </div>
+
+                <div class="form-group">
+                    <label for="size">房屋坪數 *</label>
+                    <input type="number" id="size" name="size" class="form-input" placeholder="如：8" required min="1">
+                </div>
+            </div>
+
+            <div class="filters-grid" style="margin-bottom: 1.25rem;">
+                <div class="form-group">
+                    <label for="room_type">房屋格局 *</label>
+                    <select id="room_type" name="room_type" class="filter-select" required>
+                        <option value="獨立套房">獨立套房</option>
+                        <option value="分租套房">分租套房</option>
+                        <option value="雅房">雅房</option>
+                        <option value="整層住家">整層住家</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="justify-content: center; align-items: flex-start; padding-top: 1.8rem; padding-left: 0.5rem;">
+                    <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="subsidy_available" name="subsidy_available" style="transform: scale(1.2);">
+                        可申請政府租金補貼
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="address">房屋地址 *</label>
+                <input type="text" id="address" name="address" class="form-input" placeholder="例如：台中市西屯區文華路 100 號 (近逢甲正門)" required>
+            </div>
+
+            <!-- Tags checkboxes (F-02) -->
+            <div class="form-group">
+                <label>選擇屋況標籤 (可多選)</label>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background-color: var(--bg-main); padding: 1rem; border-radius: var(--radius-sm); border: 1.5px solid var(--border);">
+                    {% for t in tags %}
+                        <label style="display: flex; align-items: center; gap: 6px; font-weight: 500; font-size: 0.9rem; cursor: pointer;">
+                            <input type="checkbox" name="tags" value="{{ t.id }}" style="transform: scale(1.1);">
+                            # {{ t.name }}
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="cover_image">📸 上傳房屋封面照片</label>
+                <input type="file" id="cover_image" name="cover_image" accept="image/*" class="form-input" style="padding: 0.5rem;">
+            </div>
+
+            <button type="submit" class="btn-primary" style="margin-top: 1rem;" {% if score < 80 %}disabled{% endif %}>
+                🚀 發布房源上架
+            </button>
+        </fieldset>
+    </form>
+</div>
+{% endblock %}

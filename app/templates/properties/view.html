@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card shadow-sm border-0 mx-auto" style="max-width: 800px;">
+    <div class="card-body p-5">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+            <h2 class="mb-0">{{ property.title }}</h2>
+            <h3 class="text-primary mb-0">${{ property.price }}<span class="fs-6 text-muted"> / 月</span></h3>
+        </div>
+        <div class="d-flex gap-2 mb-4">
+            <span class="badge bg-light text-dark border p-2">{{ property.room_type }}</span>
+            <span class="badge bg-light text-dark border p-2">{{ property.size }} 坪</span>
+            {% if property.has_subsidy %}<span class="badge bg-success p-2">可租補</span>{% endif %}
+        </div>
+        
+        <div class="row bg-light rounded-3 p-4 mb-4">
+            <div class="col-md-6 mb-3 mb-md-0">
+                <div class="text-muted small">地址</div>
+                <div class="fs-5">{{ property.address }}</div>
+            </div>
+            <div class="col-md-6">
+                <div class="text-muted small">房東 ID</div>
+                <div class="fs-5">#{{ property.landlord_id }}</div>
+            </div>
+        </div>
+
+        <h5 class="mb-3">房屋描述</h5>
+        <p class="text-muted lh-lg" style="white-space: pre-line;">{{ property.description }}</p>
+        
+        <hr class="my-4">
+        
+        <div class="d-flex justify-content-between align-items-center">
+            <a href="{{ url_for('property_bp.index') }}" class="btn btn-outline-secondary">返回列表</a>
+            <a href="{{ url_for('property_bp.edit', property_id=property.id) }}" class="btn btn-warning text-white px-4">編輯</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
