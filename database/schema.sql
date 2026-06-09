@@ -94,12 +94,47 @@ CREATE TABLE IF NOT EXISTS property_tags (
     FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
 );
 
--- 預先插入精選特色標籤
+-- 預先插入精選特色標籤（五大分類）
+
+-- 1. 租金與補助
+INSERT OR IGNORE INTO tags (name) VALUES ('可申請租補');
+INSERT OR IGNORE INTO tags (name) VALUES ('含水費');
+INSERT OR IGNORE INTO tags (name) VALUES ('含網路費');
+INSERT OR IGNORE INTO tags (name) VALUES ('含管理費');
+INSERT OR IGNORE INTO tags (name) VALUES ('含清潔費');
+
+-- 2. 房型與空間
+INSERT OR IGNORE INTO tags (name) VALUES ('電梯大樓');
+INSERT OR IGNORE INTO tags (name) VALUES ('公寓');
+INSERT OR IGNORE INTO tags (name) VALUES ('透天厝');
+INSERT OR IGNORE INTO tags (name) VALUES ('非頂樓加蓋');
+
+-- 3. 地點與交通
+INSERT OR IGNORE INTO tags (name) VALUES ('近逢甲正門');
+INSERT OR IGNORE INTO tags (name) VALUES ('近文華路商圈');
+INSERT OR IGNORE INTO tags (name) VALUES ('近僑光');
+INSERT OR IGNORE INTO tags (name) VALUES ('近水湳校區');
+
+-- 4. 設備與服務
+INSERT OR IGNORE INTO tags (name) VALUES ('冷氣');
+INSERT OR IGNORE INTO tags (name) VALUES ('冰箱');
+INSERT OR IGNORE INTO tags (name) VALUES ('洗衣機');
+INSERT OR IGNORE INTO tags (name) VALUES ('飲水機');
+INSERT OR IGNORE INTO tags (name) VALUES ('垃圾代收');
+INSERT OR IGNORE INTO tags (name) VALUES ('代收包裹');
+INSERT OR IGNORE INTO tags (name) VALUES ('光纖網路');
+INSERT OR IGNORE INTO tags (name) VALUES ('Wi-Fi');
 INSERT OR IGNORE INTO tags (name) VALUES ('落地窗');
 INSERT OR IGNORE INTO tags (name) VALUES ('採光好');
 INSERT OR IGNORE INTO tags (name) VALUES ('乾濕分離');
 INSERT OR IGNORE INTO tags (name) VALUES ('可養寵物');
-INSERT OR IGNORE INTO tags (name) VALUES ('有電梯');
 INSERT OR IGNORE INTO tags (name) VALUES ('獨立陽台');
-INSERT OR IGNORE INTO tags (name) VALUES ('有管理室');
-INSERT OR IGNORE INTO tags (name) VALUES ('近逢甲大學');
+INSERT OR IGNORE INTO tags (name) VALUES ('可開伙');
+
+-- 5. 安全與信任
+INSERT OR IGNORE INTO tags (name) VALUES ('已認證房東');
+INSERT OR IGNORE INTO tags (name) VALUES ('房東直租');
+INSERT OR IGNORE INTO tags (name) VALUES ('門禁管理');
+INSERT OR IGNORE INTO tags (name) VALUES ('24小時監控');
+INSERT OR IGNORE INTO tags (name) VALUES ('消防設備');
+INSERT OR IGNORE INTO tags (name) VALUES ('對外窗');

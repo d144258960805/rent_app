@@ -339,6 +339,8 @@ def create_app(test_config=None):
         size_range = request.args.get('size_range', '')
         subsidy_available = request.args.get('subsidy_available', '')
         selected_tag = request.args.get('tag', '')
+        # 多標籤篩選（從 checkbox 取得多個值）
+        selected_tags = request.args.getlist('tags')
 
         properties = Property.get_filtered(
             query=query,
@@ -346,20 +348,25 @@ def create_app(test_config=None):
             room_type=room_type,
             size_range=size_range,
             subsidy_available=subsidy_available,
-            tag_name=selected_tag
+            tag_name=selected_tag,
+            tag_names=selected_tags if selected_tags else None
         )
         
         tags = Tag.get_all()
+        grouped_tags, category_icons = Tag.get_grouped()
         return render_template(
             'index.html',
             properties=properties,
             tags=tags,
+            grouped_tags=grouped_tags,
+            category_icons=category_icons,
             query=query,
             rent_range=rent_range,
             room_type=room_type,
             size_range=size_range,
             subsidy_available=subsidy_available,
-            selected_tag=selected_tag
+            selected_tag=selected_tag,
+            selected_tags=selected_tags
         )
 
     return app
