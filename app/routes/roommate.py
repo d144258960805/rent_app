@@ -11,8 +11,15 @@ def school_email_verified_required(f):
 
 @bp.route('/')
 def list_posts():
-    posts = RoommatePost.get_all()
-    return render_template('roommate/list.html', posts=posts)
+    room_type = request.args.get('room_type', '').strip()
+    gender_preference = request.args.get('gender_preference', '').strip()
+    posts = RoommatePost.get_all(room_type=room_type, gender_preference=gender_preference)
+    return render_template(
+        'roommate/list.html', 
+        posts=posts, 
+        selected_room_type=room_type, 
+        selected_gender=gender_preference
+    )
 
 @bp.route('/post', methods=('GET', 'POST'))
 def post():
@@ -34,13 +41,27 @@ def post():
     if request.method == 'POST':
         title = request.form.get('title')
         content = request.form.get('content')
+        room_type = request.form.get('room_type', '').strip()
+        gender_preference = request.form.get('gender_preference', '').strip()
+        lifestyle_rules = request.form.get('lifestyle_rules', '').strip()
         
         error = None
         if not title or not content:
             error = '標題與內容為必填。'
+        elif room_type not in ['分租套房', '整層住家']:
+            error = '請選擇正確的房型。'
+        elif gender_preference not in ['男生', '女生', '不限']:
+            error = '請選擇正確的性別偏好。'
             
         if error is None:
-            RoommatePost.create(session['user_id'], title, content)
+            RoommatePost.create(
+                session['user_id'], 
+                title, 
+                content, 
+                room_type=room_type, 
+                gender_preference=gender_preference, 
+                lifestyle_rules=lifestyle_rules
+            )
             flash('🎉 徵室友公告刊登成功！學弟妹們已可在看板看見您的消息。', 'success')
             return redirect(url_for('roommate.list_posts'))
             

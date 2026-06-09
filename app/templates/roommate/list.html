@@ -5,7 +5,39 @@
 {% block content %}
 <div class="hero" style="background: linear-gradient(rgba(16, 185, 129, 0.85), rgba(16, 185, 129, 0.95));">
     <h2>🎓 揪團找室友公告區</h2>
-    <p>合租套房、整層住家徵求室友。限逢甲大學信箱認證在校生發表與留言討論！</p>
+    <p>分租套房、整層住家徵求室友。限逢甲大學信箱認證在校生發表與留言討論！</p>
+</div>
+
+<!-- 篩選器區塊 -->
+<div class="search-card" style="margin-bottom: 2rem; padding: 1.5rem;">
+    <form method="get" action="{{ url_for('roommate.list_posts') }}" class="search-form">
+        <div class="filters-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); display: grid; gap: 1rem; align-items: flex-end;">
+            <div class="filter-group">
+                <label for="room_type">🏠 期望合租房型</label>
+                <select id="room_type" name="room_type" class="filter-select" style="margin-top: 5px;">
+                    <option value="">全部房型</option>
+                    <option value="分租套房" {% if selected_room_type == '分租套房' %}selected{% endif %}>分租套房 (Suite)</option>
+                    <option value="整層住家" {% if selected_room_type == '整層住家' %}selected{% endif %}>整層住家 (Whole House)</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="gender_preference">👥 期望性別偏好</label>
+                <select id="gender_preference" name="gender_preference" class="filter-select" style="margin-top: 5px;">
+                    <option value="">全部偏好</option>
+                    <option value="不限" {% if selected_gender == '不限' %}selected{% endif %}>不限性別</option>
+                    <option value="男生" {% if selected_gender == '男生' %}selected{% endif %}>限男生</option>
+                    <option value="女生" {% if selected_gender == '女生' %}selected{% endif %}>限女生</option>
+                </select>
+            </div>
+            
+            <div>
+                <button type="submit" class="btn-primary" style="background-color: var(--success); height: 43px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+                    🔍 篩選室友條件
+                </button>
+            </div>
+        </div>
+    </form>
 </div>
 
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
@@ -32,6 +64,25 @@
                             <span class="roommate-status closed">已結案</span>
                         {% endif %}
                     </div>
+                </div>
+                
+                <!-- 期待條件標籤展示 -->
+                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
+                    {% if p.room_type %}
+                        <span style="font-size: 0.8rem; padding: 0.25rem 0.65rem; background-color: var(--primary-light); color: var(--primary); border: 1px solid #bfdbfe; border-radius: 50px; font-weight: 600;">
+                            🏠 {{ p.room_type }}
+                        </span>
+                    {% endif %}
+                    {% if p.gender_preference %}
+                        <span style="font-size: 0.8rem; padding: 0.25rem 0.65rem; background-color: var(--warning-light); color: var(--warning); border: 1px solid #fde68a; border-radius: 50px; font-weight: 600;">
+                            👥 性別偏好: {{ p.gender_preference }}
+                        </span>
+                    {% endif %}
+                    {% if p.lifestyle_rules %}
+                        <span style="font-size: 0.8rem; padding: 0.25rem 0.65rem; background-color: #f1f5f9; color: var(--text-muted); border: 1px solid var(--border); border-radius: 50px; font-weight: 500;">
+                            ✨ 作息: {{ p.lifestyle_rules }}
+                        </span>
+                    {% endif %}
                 </div>
                 
                 <p style="color: #4b5563; font-size: 0.95rem; margin-bottom: 1.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
@@ -61,7 +112,7 @@
 {% else %}
     <div style="background: white; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 4rem; text-align: center; color: var(--text-muted);">
         <p style="font-size: 3rem; margin-bottom: 1rem;">💬</p>
-        <p style="font-size: 1.1rem; font-weight: 500;">目前沒有揪團找室友公告發表，歡迎搶先發布您的徵室友需求！</p>
+        <p style="font-size: 1.1rem; font-weight: 500;">沒有符合您篩選條件的室友徵求貼文，歡迎發布您的揪團需求！</p>
     </div>
 {% endif %}
 {% endblock %}

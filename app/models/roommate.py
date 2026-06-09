@@ -3,26 +3,36 @@ from app.models import get_db
 
 class RoommatePost:
     @staticmethod
-    def create(author_id, title, content):
+    def create(author_id, title, content, room_type=None, gender_preference=None, lifestyle_rules=None):
         db = get_db()
         cursor = db.cursor()
         cursor.execute(
-            "INSERT INTO roommate_posts (author_id, title, content) VALUES (?, ?, ?)",
-            (author_id, title, content)
+            "INSERT INTO roommate_posts (author_id, title, content, room_type, gender_preference, lifestyle_rules) VALUES (?, ?, ?, ?, ?, ?)",
+            (author_id, title, content, room_type, gender_preference, lifestyle_rules)
         )
         db.commit()
         return cursor.lastrowid
 
     @staticmethod
-    def get_all():
+    def get_all(room_type=None, gender_preference=None):
         db = get_db()
         cursor = db.cursor()
-        cursor.execute("""
+        query = """
             SELECT r.*, u.name as author_name, u.school_email as author_school_email 
             FROM roommate_posts r 
             JOIN users u ON r.author_id = u.id 
-            ORDER BY r.created_at DESC
-        """)
+            WHERE 1=1
+        """
+        params = []
+        if room_type and room_type != '全部':
+            query += " AND r.room_type = ?"
+            params.append(room_type)
+        if gender_preference and gender_preference != '全部':
+            query += " AND r.gender_preference = ?"
+            params.append(gender_preference)
+            
+        query += " ORDER BY r.created_at DESC"
+        cursor.execute(query, params)
         return cursor.fetchall()
         
     @staticmethod

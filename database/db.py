@@ -116,8 +116,11 @@ def init_db():
             title TEXT NOT NULL,
             description TEXT NOT NULL,
             expected_rent INTEGER,
+            room_type TEXT,
+            gender_preference TEXT,
+            lifestyle_rules TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users (id)
+            FOREIGN KEY (user_id) REFERENCES users(id)
         )
     ''')
 

@@ -18,7 +18,7 @@ class RoommateController:
         return [dict(row) for row in rows]
 
     @staticmethod
-    def create_post(user_id, title, description, expected_rent):
+    def create_post(user_id, title, description, expected_rent, room_type=None, gender_preference=None, lifestyle_rules=None):
         """
         發布揪室友貼文。完成後可獲得信用積分加分 (+3 分)。
         """
@@ -35,9 +35,9 @@ class RoommateController:
 
         try:
             cursor.execute('''
-                INSERT INTO roommates (user_id, title, description, expected_rent)
-                VALUES (?, ?, ?, ?)
-            ''', (user_id, title, description, expected_rent_val))
+                INSERT INTO roommates (user_id, title, description, expected_rent, room_type, gender_preference, lifestyle_rules)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ''', (user_id, title, description, expected_rent_val, room_type, gender_preference, lifestyle_rules))
             
             conn.commit()
             conn.close()
