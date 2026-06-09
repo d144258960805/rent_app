@@ -102,7 +102,7 @@ if __name__ == "__main__":
     from database.db import get_connection
     conn = get_connection()
     # 建立一個測試用的初始用戶，分數為 100
-    conn.execute("INSERT OR IGNORE INTO users (id, username, role, total_credit) VALUES (1, 'Test User', 'tenant', 100)")
+    conn.execute("INSERT OR IGNORE INTO users (id, username, role, credit_score) VALUES (1, 'Test User', 'tenant', 100)")
     conn.commit()
     conn.close()
     
