@@ -21,7 +21,31 @@
             <textarea id="content" name="content" class="form-textarea" placeholder="請詳細寫出：&#10;1. 房屋大略位置與租金分攤&#10;2. 希望室友的作息習慣（如不抽菸、不帶異性、愛乾淨）&#10;3. 公共水電分攤方式與合約期間..." rows="6" required></textarea>
         </div>
 
-        <button type="submit" class="btn-primary" style="background-color: var(--success); margin-top: 1rem;">
+        <div class="form-group">
+            <label for="room_type">合租房型 *</label>
+            <select id="room_type" name="room_type" class="filter-select" style="width: 100%; border: 1.5px solid var(--border);" required>
+                <option value="" disabled selected>-- 請選擇合租類型 --</option>
+                <option value="分租套房">分租套房 (Suite)</option>
+                <option value="整層住家">整層住家 (Whole House)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="gender_preference">性別偏好 *</label>
+            <select id="gender_preference" name="gender_preference" class="filter-select" style="width: 100%; border: 1.5px solid var(--border);" required>
+                <option value="" disabled selected>-- 請選擇期望性別 --</option>
+                <option value="不限">不限性別</option>
+                <option value="男生">限男生</option>
+                <option value="女生">限女生</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="lifestyle_rules">生活作息與期望條件</label>
+            <input type="text" id="lifestyle_rules" name="lifestyle_rules" class="form-input" placeholder="例如：作息正常、不吸菸、不可帶異性、愛乾淨">
+        </div>
+
+        <button type="submit" class="btn-primary" style="background-color: var(--success); margin-top: 1.5rem;">
             🚀 發表揪團公告
         </button>
     </form>

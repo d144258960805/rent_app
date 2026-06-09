@@ -285,8 +285,8 @@ def create_app(test_config=None):
             db = g._database = sqlite3.connect(app.config['DATABASE'])
             db.row_factory = sqlite3.Row
             
-        with app.open_resource('../database/schema.sql', mode='r') as f:
-            db.cursor().executescript(f.read())
+        with app.open_resource('../database/schema.sql', mode='rb') as f:
+            db.cursor().executescript(f.read().decode('utf-8'))
         db.commit()
 
         # 安全升級：確保 properties 表包含 image_path 欄位
@@ -300,6 +300,21 @@ def create_app(test_config=None):
         for col in ["owner_name", "property_address", "ai_report"]:
             try:
                 db.cursor().execute(f"ALTER TABLE verifications ADD COLUMN {col} TEXT;")
+                db.commit()
+            except sqlite3.OperationalError:
+                pass
+
+        # 安全升級：更名 student_id 到 author_id
+        try:
+            db.cursor().execute("ALTER TABLE roommate_posts RENAME COLUMN student_id TO author_id;")
+            db.commit()
+        except sqlite3.OperationalError:
+            pass
+
+        # 安全升級：確保 roommate_posts 表包含新增的期望條件欄位
+        for col in ["room_type", "gender_preference", "lifestyle_rules"]:
+            try:
+                db.cursor().execute(f"ALTER TABLE roommate_posts ADD COLUMN {col} TEXT;")
                 db.commit()
             except sqlite3.OperationalError:
                 pass
