@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request
 from app.models.property_model import get_properties_with_filter
 
-bp = Blueprint('property', __name__, url_prefix='/properties')
+bp = Blueprint('property_list', __name__, url_prefix='/properties')
 
 @bp.route('/')
 def list_properties():

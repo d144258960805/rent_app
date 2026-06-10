@@ -66,13 +66,13 @@
                             <span class="review-stars">
                                 {% for i in range(1, 6) %}
                                     {% if i <= r.rating %}★{% else %}☆{% endif %}
-                                endfor
+                                {% endfor %}
                             </span>
                         </div>
-                        <p style="color: #374151; font-size: 0.95rem;">{{ r.content }}</p>
-                        {% if r.image_path %}
-                            <a href="{{ url_for('static', filename=r.image_path) }}" target="_blank">
-                                <img src="{{ url_for('static', filename=r.image_path) }}" alt="實地照片" class="review-img">
+                        <p style="color: #374151; font-size: 0.95rem;">{{ r.comment }}</p>
+                        {% if r.image_url %}
+                            <a href="{{ r.image_url }}" target="_blank">
+                                <img src="{{ r.image_url }}" alt="實地照片" class="review-img">
                             </a>
                         {% endif %}
                         <div style="font-size: 0.8rem; color: var(--text-muted); text-align: right; margin-top: 8px;">
